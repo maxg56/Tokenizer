@@ -17,7 +17,7 @@ describe("Token42", function () {
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
 
     // Déployer le contrat
-    const Token42 = await ethers.getContractFactory("Token42");
+    const Token42 = await ethers.getContractFactory("MaxToken42");
     token = await Token42.deploy(INITIAL_SUPPLY);
     await token.deployed();
   });
@@ -35,7 +35,7 @@ describe("Token42", function () {
     });
 
     it("Should have correct name and symbol", async function () {
-      expect(await token.name()).to.equal("Token42");
+      expect(await token.name()).to.equal("MaxToken42");
       expect(await token.symbol()).to.equal("TK42");
     });
 
