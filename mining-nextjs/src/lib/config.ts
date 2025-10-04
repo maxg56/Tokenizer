@@ -1,5 +1,5 @@
 import { http, createConfig } from 'wagmi'
-import { bsc, bscTestnet } from 'wagmi/chains'
+import { bsc, bscTestnet, localhost } from 'wagmi/chains'
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
 
 // Configuration du projet
@@ -7,13 +7,14 @@ export const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID' // Remplacer par votre 
 
 // Configuration des chaînes
 export const config = createConfig({
-  chains: [bscTestnet, bsc],
+  chains: [localhost, bscTestnet, bsc],
   connectors: [
     injected(),
     coinbaseWallet(),
     walletConnect({ projectId }),
   ],
   transports: {
+    [localhost.id]: http(),
     [bscTestnet.id]: http(),
     [bsc.id]: http(),
   },
@@ -21,7 +22,7 @@ export const config = createConfig({
 
 // Configuration du contrat MaxToken42Mining
 export const TOKEN_CONFIG = {
-  address: '0x...' as `0x${string}`, // Remplacer par l'adresse déployée
+  address: '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}`, // Adresse déployée localement
   abi: [
     // ABI du contrat ERC20 avec minting
     'function name() view returns (string)',
@@ -35,12 +36,12 @@ export const TOKEN_CONFIG = {
     'function canMint(address account) view returns (bool)',
     'event Transfer(address indexed from, address indexed to, uint256 value)',
   ] as const,
-  chainId: bscTestnet.id, // Ou bsc.id pour mainnet
+  chainId: localhost.id, // Réseau local pour les tests
 } as const
 
 // Configuration du contrat de minage
 export const MINING_CONFIG = {
-  address: '0x...' as `0x${string}`, // Remplacer par l'adresse déployée
+  address: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}`, // Adresse déployée localement
   abi: [
     // ABI du contrat de minage
     'function startMining(uint256 power) external',
@@ -64,7 +65,7 @@ export const MINING_CONFIG = {
     'event DailyBonusClaimed(address indexed miner, uint256 amount)',
     'event DifficultyAdjusted(uint256 oldDifficulty, uint256 newDifficulty)',
   ] as const,
-  chainId: bscTestnet.id, // Ou bsc.id pour mainnet
+  chainId: localhost.id, // Réseau local pour les tests
 } as const
 
 // Types pour TypeScript
