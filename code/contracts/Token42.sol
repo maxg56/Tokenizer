@@ -7,4 +7,5 @@ contract MaxToken42 is ERC20 {
     constructor(uint256 initialSupply) ERC20("MaxToken42", "MTK42") {
         _mint(msg.sender, initialSupply);
     }
+
 }
