@@ -13,8 +13,8 @@ describe("Mining System", function () {
     const token = await MaxToken42Mining.deploy(initialSupply);
 
     // Déployer le contrat de minage
-    const MiningContractV2 = await ethers.getContractFactory("MiningContractV2");
-    const miningContract = await MiningContractV2.deploy(await token.getAddress());
+    const MiningContract = await ethers.getContractFactory("MiningContract");
+    const miningContract = await MiningContract.deploy(await token.getAddress());
 
     // Autoriser le contrat de minage à minter
     await token.addMiner(await miningContract.getAddress());

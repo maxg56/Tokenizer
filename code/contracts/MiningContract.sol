@@ -4,13 +4,13 @@ pragma solidity ^0.8.0;
 import "./MaxToken42Mining.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol"; 
 
 /**
- * @title MiningContractV2
+ * @title MiningContract
  * @dev Contrat de minage amélioré avec mint direct des tokens
  */
-contract MiningContractV2 is Ownable, ReentrancyGuard, Pausable {
+contract MiningContract is Ownable, ReentrancyGuard, Pausable {
     MaxToken42Mining public immutable token;
 
     // Configuration du minage

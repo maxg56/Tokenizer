@@ -19,13 +19,13 @@ describe("Token42", function () {
     // Déployer le contrat
     const Token42 = await ethers.getContractFactory("MaxToken42");
     token = await Token42.deploy(INITIAL_SUPPLY);
-    await token.deployed();
+    await token.waitForDeployment();
   });
 
   describe("Deployment", function () {
     it("Should set the right owner", async function () {
       expect(await token.balanceOf(owner.getAddress())).to.equal(
-        ethers.utils.parseUnits(INITIAL_SUPPLY.toString(), DECIMALS)
+        ethers.parseUnits(INITIAL_SUPPLY.toString(), DECIMALS)
       );
     });
 
@@ -36,7 +36,7 @@ describe("Token42", function () {
 
     it("Should have correct name and symbol", async function () {
       expect(await token.name()).to.equal("MaxToken42");
-      expect(await token.symbol()).to.equal("TK42");
+      expect(await token.symbol()).to.equal("MTK42");
     });
 
     it("Should have correct decimals", async function () {
@@ -46,7 +46,7 @@ describe("Token42", function () {
 
   describe("Transactions", function () {
     it("Should transfer tokens between accounts", async function () {
-      const transferAmount = ethers.utils.parseUnits("50", DECIMALS);
+      const transferAmount = ethers.parseUnits("50", DECIMALS);
 
       // Transférer 50 tokens du owner vers addr1
       await token.transfer(addr1.getAddress(), transferAmount);
@@ -61,7 +61,7 @@ describe("Token42", function () {
 
     it("Should fail if sender doesn't have enough tokens", async function () {
       const initialOwnerBalance = await token.balanceOf(owner.getAddress());
-      const transferAmount = initialOwnerBalance.add(1);
+      const transferAmount = initialOwnerBalance + 1n;
 
       // Essayer de transférer plus que le solde disponible
       await expect(
@@ -71,7 +71,7 @@ describe("Token42", function () {
 
     it("Should update balances after transfers", async function () {
       const initialOwnerBalance = await token.balanceOf(owner.getAddress());
-      const transferAmount = ethers.utils.parseUnits("100", DECIMALS);
+      const transferAmount = ethers.parseUnits("100", DECIMALS);
 
       // Transférer 100 tokens du owner vers addr1
       await token.transfer(addr1.getAddress(), transferAmount);
@@ -87,7 +87,7 @@ describe("Token42", function () {
 
   describe("Allowances", function () {
     it("Should approve tokens for delegated transfer", async function () {
-      const approveAmount = ethers.utils.parseUnits("100", DECIMALS);
+      const approveAmount = ethers.parseUnits("100", DECIMALS);
 
       // Owner approuve addr1 pour dépenser 100 tokens
       await token.approve(addr1.getAddress(), approveAmount);
@@ -97,8 +97,8 @@ describe("Token42", function () {
     });
 
     it("Should allow delegated transfer", async function () {
-      const approveAmount = ethers.utils.parseUnits("100", DECIMALS);
-      const transferAmount = ethers.utils.parseUnits("50", DECIMALS);
+      const approveAmount = ethers.parseUnits("100", DECIMALS);
+      const transferAmount = ethers.parseUnits("50", DECIMALS);
 
       // Owner approuve addr1
       await token.approve(addr1.getAddress(), approveAmount);
@@ -116,8 +116,8 @@ describe("Token42", function () {
     });
 
     it("Should fail delegated transfer if allowance is insufficient", async function () {
-      const approveAmount = ethers.utils.parseUnits("50", DECIMALS);
-      const transferAmount = ethers.utils.parseUnits("100", DECIMALS);
+      const approveAmount = ethers.parseUnits("50", DECIMALS);
+      const transferAmount = ethers.parseUnits("100", DECIMALS);
 
       // Owner approuve seulement 50 tokens
       await token.approve(addr1.getAddress(), approveAmount);
@@ -143,15 +143,15 @@ describe("Token42", function () {
     });
 
     it("Should not allow transfer to zero address", async function () {
-      const transferAmount = ethers.utils.parseUnits("50", DECIMALS);
+      const transferAmount = ethers.parseUnits("50", DECIMALS);
 
       await expect(
-        token.transfer(ethers.constants.AddressZero, transferAmount)
+        token.transfer(ethers.ZeroAddress, transferAmount)
       ).to.be.revertedWith("ERC20: transfer to the zero address");
     });
 
     it("Should emit Transfer event", async function () {
-      const transferAmount = ethers.utils.parseUnits("50", DECIMALS);
+      const transferAmount = ethers.parseUnits("50", DECIMALS);
 
       await expect(token.transfer(addr1.getAddress(), transferAmount))
         .to.emit(token, "Transfer")
@@ -159,7 +159,7 @@ describe("Token42", function () {
     });
 
     it("Should emit Approval event", async function () {
-      const approveAmount = ethers.utils.parseUnits("100", DECIMALS);
+      const approveAmount = ethers.parseUnits("100", DECIMALS);
 
       await expect(token.approve(addr1.getAddress(), approveAmount))
         .to.emit(token, "Approval")
