@@ -8,23 +8,23 @@ async function main() {
 
   const INITIAL_SUPPLY = 1_000_000; // 1 million tokens
 
-  // Déployer le contrat Token42
-  const Token42 = await ethers.getContractFactory("Token42");
-  const token = await Token42.deploy(INITIAL_SUPPLY);
+  // Déployer le contrat MaxToken42
+  const MaxToken42 = await ethers.getContractFactory("MaxToken42");
+  const token = await MaxToken42.deploy(INITIAL_SUPPLY);
 
   await token.waitForDeployment();
 
   const contractAddress = await token.getAddress();
 
-  console.log("✅ Token42 deployed to:", contractAddress);
-  console.log("📊 Initial supply:", INITIAL_SUPPLY, "TK42");
+  console.log("✅ MaxToken42 deployed to:", contractAddress);
+  console.log("📊 Initial supply:", INITIAL_SUPPLY, "MTK42");
   console.log("🎯 Token name:", await token.name());
   console.log("🔤 Token symbol:", await token.symbol());
   console.log("🔢 Decimals:", await token.decimals());
 
   // Vérifier le solde du déployeur
   const deployerBalance = await token.balanceOf(deployer.address);
-  console.log("💎 Deployer balance:", ethers.formatUnits(deployerBalance, 18), "TK42");
+  console.log("💎 Deployer balance:", ethers.formatUnits(deployerBalance, 18), "MTK42");
 
   // Afficher les informations utiles pour la vérification
   console.log("\n📋 Contract verification info:");
