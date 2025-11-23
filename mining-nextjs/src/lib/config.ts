@@ -19,7 +19,7 @@ export const config = createConfig({
 
 // Configuration du contrat MaxToken42Mining
 export const TOKEN_CONFIG = {
-  address: '0x0165878A594ca255338adfa4d48449f69242Eb8F' as `0x${string}`, // Adresse déployée localement
+  address: '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}`, // Adresse déployée localement
   abi: [
     // ABI du contrat ERC20 avec minting
     'function name() view returns (string)',
@@ -65,9 +65,47 @@ export const MINING_CONFIG = {
   chainId: localhost.id, // Réseau local pour les tests
 } as const
 
+// Configuration du Faucet
+export const FAUCET_CONFIG = {
+  address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}`,
+  abi: [
+    'function drip() external',
+    'function canDrip(address user) view returns (bool canClaim, uint256 timeRemaining)',
+    'function getStats() view returns (uint256 balance, uint256 dripAmount, uint256 cooldownTime, uint256 totalDistributed, uint256 totalClaims, uint256 dailyDripsRemaining)',
+    'function getUserStats(address user) view returns (uint256 totalReceived, uint256 lastDripTime, bool canDrip, uint256 timeUntilNextDrip)',
+    'function dripAmount() view returns (uint256)',
+    'function cooldownTime() view returns (uint256)',
+    'event TokensDripped(address indexed recipient, uint256 amount)',
+  ] as const,
+  chainId: localhost.id,
+} as const
+
+// Configuration du MultiSig
+export const MULTISIG_CONFIG = {
+  address: '0x0165878A594ca255338adfa4d48449f69242Eb8F' as `0x${string}`,
+  abi: [
+    'function submitTransaction(address to, uint256 value, bytes data) returns (uint256)',
+    'function confirmTransaction(uint256 txIndex) external',
+    'function executeTransaction(uint256 txIndex) external',
+    'function revokeConfirmation(uint256 txIndex) external',
+    'function getOwners() view returns (address[])',
+    'function getTransactionCount() view returns (uint256)',
+    'function getTransaction(uint256 txIndex) view returns (address to, uint256 value, bytes data, bool executed, uint256 numConfirmations, uint256 submitTime)',
+    'function getPendingTransactions() view returns (uint256[])',
+    'function canExecute(uint256 txIndex) view returns (bool)',
+    'function numConfirmationsRequired() view returns (uint256)',
+    'event SubmitTransaction(address indexed owner, uint256 indexed txIndex, address indexed to, uint256 value, bytes data)',
+    'event ConfirmTransaction(address indexed owner, uint256 indexed txIndex)',
+    'event ExecuteTransaction(address indexed owner, uint256 indexed txIndex)',
+  ] as const,
+  chainId: localhost.id,
+} as const
+
 // Types pour TypeScript
 export type TokenConfig = typeof TOKEN_CONFIG
 export type MiningConfig = typeof MINING_CONFIG
+export type FaucetConfig = typeof FAUCET_CONFIG
+export type MultiSigConfig = typeof MULTISIG_CONFIG
 
 declare module 'wagmi' {
   interface Register {

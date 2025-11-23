@@ -1,245 +1,262 @@
-# 🚀 Tokenizer42 - ERC20 Token avec MultiSig
+# MaxToken42 Mining System
 
-Un projet blockchain complet avec un token ERC20 et un contrat MultiSig, développé en **Solidity** avec des tests et scripts en **TypeScript**.
+Un ecosysteme blockchain complet avec token ERC20 minable, faucet, et portefeuille multi-signatures.
 
-## 📋 Vue d'ensemble
+## Vue d'ensemble
 
 Ce projet contient :
-- **Token42** : Token ERC20 standard avec 1M de tokens initiaux
-- **MultiSig42** : Contrat de multisignature pour sécuriser les transactions importantes
-- **Tests complets** : Suite de tests TypeScript avec Hardhat
-- **Scripts de déploiement** : Automatisation du déploiement sur différents réseaux
+- **MaxToken42Mining** : Token ERC20 avec support de minage (max supply 10M)
+- **MiningContract** : Systeme de minage proof-of-work avec rewards et bonus
+- **Faucet** : Distribution gratuite de tokens pour testnets
+- **MultiSigWallet** : Portefeuille multi-signatures pour la gouvernance
+- **Frontend Next.js** : Interface web avec wagmi + RainbowKit
 
-## 🛠️ Stack technique
+## Stack technique
 
-- **Solidity** `^0.8.20` - Smart contracts
-- **TypeScript** - Tests et scripts
-- **Hardhat** - Framework de développement
-- **OpenZeppelin** - Librairies sécurisées
-- **Ethers.js** - Interaction avec la blockchain
-- **Chai** - Framework de tests
+| Composant | Technologie |
+|-----------|-------------|
+| Smart Contracts | Solidity 0.8.20, OpenZeppelin 5.0 |
+| Framework | Hardhat 2.x |
+| Tests | TypeScript, Chai, Mocha |
+| Frontend | Next.js 15, React 19, Tailwind CSS |
+| Web3 | wagmi, viem, ethers.js 6, RainbowKit |
+| CI/CD | GitHub Actions |
 
-## 📁 Structure du projet
+## Structure du projet
 
 ```
 Tokenizer/
-├── README.md                     → Documentation principale
-├── code/                         → Code source
-│   ├── contracts/                → Smart contracts Solidity
-│   │   ├── Token42.sol          → Token ERC20
-│   │   └── MultiSig42.sol       → Contrat MultiSig
-│   ├── test/                    → Tests TypeScript
-│   │   └── Token42.test.ts      → Tests du token
-│   ├── scripts/                 → Scripts de déploiement
-│   │   └── deploy.ts            → Déploiement automatisé
-│   ├── hardhat.config.ts        → Configuration Hardhat
-│   ├── package.json             → Dépendances et scripts
-│   ├── .env.example             → Template variables d'environnement
-│   └── .gitignore               → Fichiers à ignorer
-└── docs/                        → Documentation technique
+├── code/                          # Smart contracts
+│   ├── contracts/
+│   │   ├── MaxToken42Mining.sol   # Token ERC20 avec minage
+│   │   ├── MiningContract.sol     # Contrat de minage PoW
+│   │   ├── Faucet.sol             # Faucet pour distribution
+│   │   ├── MultiSigWallet.sol     # Portefeuille multi-sig
+│   │   └── Token42.sol            # Token ERC20 simple
+│   ├── test/                      # Tests unitaires (64 tests)
+│   ├── scripts/                   # Scripts de deploiement
+│   └── hardhat.config.ts
+├── mining-nextjs/                 # Frontend Next.js
+│   ├── src/
+│   │   ├── app/                   # Pages
+│   │   ├── components/            # Composants React
+│   │   ├── hooks/                 # Hooks custom
+│   │   └── lib/                   # Config et utilitaires
+│   └── package.json
+├── .github/workflows/ci.yml       # GitHub Actions CI
+└── README.md
 ```
 
-## 🚀 Installation rapide
+## Installation rapide
 
-### Prérequis
-- **Node.js** `>=16.0.0`
-- **pnpm** (recommandé) ou npm
-- **Git**
+### Prerequisites
+- Node.js >= 20
+- pnpm >= 9
+- Git
 
-### Installation
+### Backend (Smart Contracts)
+
 ```bash
-# Cloner le projet
-git clone <your-repo-url>
-cd Tokenizer/code
-
-# Installer les dépendances
+cd code
 pnpm install
-
-# Copier le fichier d'environnement
-cp .env.example .env
-```
-
-### Configuration
-Éditer le fichier `.env` :
-```bash
-# Clé privée de ton wallet (SANS le 0x)
-PRIVATE_KEY=your_private_key_here
-
-# API Key pour BSCScan (optionnel, pour vérifier le contrat)
-BSCSCAN_API_KEY=your_bscscan_api_key_here
-
-# Activer le rapport de gas (optionnel)
-REPORT_GAS=true
-```
-
-## 🧪 Tests
-
-### Lancer tous les tests
-```bash
-pnpm test
-```
-
-### Tests couverts
-- ✅ **Déploiement** : Vérification des paramètres initiaux
-- ✅ **Transferts** : Entre différents comptes
-- ✅ **Allowances** : Système d'approbation ERC20
-- ✅ **Edge cases** : Gestion des erreurs et cas limites
-- ✅ **Events** : Émission des événements Transfer/Approval
-
-### Exemple de sortie
-```
-  Token42
-    Deployment
-      ✓ Should set the right owner
-      ✓ Should assign the total supply of tokens to the owner
-      ✓ Should have correct name and symbol
-    Transactions
-      ✓ Should transfer tokens between accounts
-      ✓ Should fail if sender doesn't have enough tokens
-    ...
-  8 passing (2s)
-```
-
-## 🌐 Déploiement
-
-### Compilation
-```bash
 pnpm compile
+pnpm test          # 64 tests
 ```
 
-### Réseau local (développement)
-```bash
-# Terminal 1 : Lancer un nœud local
-pnpm node
+### Frontend
 
-# Terminal 2 : Déployer
-pnpm run deploy:local
+```bash
+cd mining-nextjs
+pnpm install
+pnpm dev           # http://localhost:3000
+```
+
+## Deploiement
+
+### Local (developpement)
+
+```bash
+# Terminal 1: Lancer le noeud Hardhat
+cd code && pnpm node
+
+# Terminal 2: Deployer tous les contrats
+pnpm deploy:local
 ```
 
 ### BSC Testnet
+
 ```bash
-pnpm run deploy:bsctest
+# Configurer .env avec PRIVATE_KEY
+pnpm deploy:bsctest
 ```
 
-### BSC Mainnet (production)
+### BSC Mainnet
+
 ```bash
-# Assure-toi d'avoir des BNB pour les frais de gas !
-pnpm exec hardhat run scripts/deploy.ts --network bsc
+pnpm deploy:bsc
 ```
 
-### Exemple de déploiement réussi
-```
-🚀 Deploying Token42 with account: 0x742d35Cc6523Bb...
-💰 Account balance: 0.1 ETH
-✅ Token42 deployed to: 0x1234567890abcdef...
-📊 Initial supply: 1000000 TK42
-🎯 Token name: Token42
-🔤 Token symbol: TK42
-```
+## Contrats
 
-## 📊 Caractéristiques du Token42
+### MaxToken42Mining (Token)
 
-| Propriété | Valeur |
+| Propriete | Valeur |
 |-----------|--------|
-| **Nom** | MaxToken42 |
-| **Symbole** | MTK42 |
-| **Décimales** | 18 |
-| **Supply initial** | 1,000,000 TK42 |
-| **Standard** | ERC20 |
-| **Mintable** | Non (supply fixe) |
-| **Burnable** | Non |
+| Nom | MaxToken42 |
+| Symbole | MTK42 |
+| Decimales | 18 |
+| Supply initiale | 1,000,000 MTK42 |
+| Supply max | 10,000,000 MTK42 |
+| Mintable | Oui (MINER_ROLE) |
+| Burnable | Oui (holder) |
 
-## 🔐 Sécurité
+**Fonctions principales:**
+- `mint(to, amount)` - Minter des tokens (MINER_ROLE)
+- `burn(amount)` - Bruler ses tokens
+- `addMiner(address)` - Ajouter un mineur (owner)
+- `removeMiner(address)` - Retirer un mineur (owner)
 
-### Smart contracts
-- Utilise **OpenZeppelin** pour les standards sécurisés
-- Code audité et testé
-- Pas de fonctions dangereuses (mint, burn non autorisés)
+### MiningContract (Minage)
 
-### Bonnes pratiques
-- ✅ Clés privées dans `.env` (jamais dans le code)
-- ✅ `.env` dans `.gitignore`
-- ✅ Tests exhaustifs avant déploiement
-- ✅ Vérification des contrats sur BSCScan
+| Parametre | Valeur |
+|-----------|--------|
+| Reward de base | 100 MTK42 |
+| Difficulte initiale | 1000 |
+| Temps de bloc cible | 5 minutes |
+| Halving | Tous les 210,000 blocs |
+| Bonus quotidien | 50 MTK42 |
 
-## 🛠️ Scripts disponibles
+**Fonctions principales:**
+- `startMining(power)` - Demarrer le minage (power 1-100)
+- `stopMining()` - Arreter le minage
+- `mineBlock(nonce)` - Soumettre un proof-of-work
+- `claimDailyBonus()` - Reclamer le bonus quotidien
+- `getMinerStats(address)` - Stats d'un mineur
+- `getGlobalStats()` - Stats globales
+
+**Systeme de rewards:**
+- Bonus de puissance (50-150% selon power)
+- Bonus de fidelite (jusqu'a 25% apres 30 jours)
+- Bonus de performance (jusqu'a 10% apres 10 blocs)
+- Halving automatique tous les 210k blocs
+
+### Faucet
+
+| Parametre | Valeur |
+|-----------|--------|
+| Montant par demande | 100 MTK42 |
+| Cooldown | 24 heures |
+| Limite quotidienne | 1000 demandes |
+
+**Fonctions principales:**
+- `drip()` - Demander des tokens
+- `canDrip(address)` - Verifier si disponible
+- `getStats()` - Statistiques du faucet
+- `fund(amount)` - Financer le faucet
+
+### MultiSigWallet
+
+**Fonctions principales:**
+- `submitTransaction(to, value, data)` - Soumettre une transaction
+- `confirmTransaction(txIndex)` - Confirmer
+- `executeTransaction(txIndex)` - Executer
+- `revokeConfirmation(txIndex)` - Revoquer
+- `addOwner(address)` - Ajouter un owner (via multisig)
+- `removeOwner(address)` - Retirer un owner (via multisig)
+- `changeRequirement(n)` - Modifier le quorum (via multisig)
+
+## Tests
 
 ```bash
-# Développement
-pnpm compile          # Compiler les contrats
+cd code
+pnpm test
+```
+
+**Couverture:**
+- 64 tests passants
+- Token42: 14 tests (ERC20 standard)
+- MiningContract: 16 tests (minage, rewards, admin)
+- Faucet: 13 tests (drip, cooldown, stats)
+- MultiSigWallet: 21 tests (submit, confirm, execute, governance)
+
+## CI/CD
+
+Le projet inclut une GitHub Action (`.github/workflows/ci.yml`) qui:
+1. Compile les contrats
+2. Execute les tests
+3. Genere un rapport de couverture
+4. Lint le frontend
+5. Build le frontend
+6. Scan de securite avec Slither
+
+## Securite
+
+### Points forts
+- OpenZeppelin v5 pour les standards
+- ReentrancyGuard sur les fonctions critiques
+- Pausable pour les urgences
+- AccessControl pour les roles
+- Tests exhaustifs
+
+### Recommandations
+- Limiter `activeMinersList` pour eviter DoS
+- Ajouter un timelock pour les fonctions admin
+- Audit externe avant mainnet
+
+## Scripts disponibles
+
+```bash
+# Backend (code/)
+pnpm compile         # Compiler les contrats
 pnpm test            # Lancer les tests
-pnpm node            # Nœud local Hardhat
+pnpm coverage        # Rapport de couverture
+pnpm node            # Noeud local Hardhat
+pnpm deploy:local    # Deployer localement
+pnpm deploy:bsctest  # Deployer sur BSC Testnet
+pnpm deploy:bsc      # Deployer sur BSC Mainnet
 
-# Déploiement
-pnpm run deploy:local    # Déployer en local
-pnpm run deploy:bsctest  # Déployer sur BSC Testnet
-
-# Utilitaires
-pnpm run coverage       # Rapport de couverture des tests
-pnpm run gas-report     # Rapport de consommation gas
+# Frontend (mining-nextjs/)
+pnpm dev             # Serveur de dev
+pnpm build           # Build production
+pnpm lint            # Linter
 ```
 
-## 🌍 Réseaux supportés
+## Configuration
 
-| Réseau | Chain ID | RPC URL | Usage |
-|--------|----------|---------|-------|
-| **Hardhat Local** | 1337 | http://127.0.0.1:8545 | Développement |
-| **BSC Testnet** | 97 | https://data-seed-prebsc-1-s1.binance.org:8545/ | Tests |
-| **BSC Mainnet** | 56 | https://bsc-dataseed1.binance.org/ | Production |
+### Variables d'environnement (code/.env)
 
-## 🔧 Dépannage
-
-### Erreurs communes
-
-**Error: insufficient funds**
 ```bash
-# Solution : Ajouter des BNB/ETH sur ton wallet
+# Cle privee du deployer (sans 0x)
+PRIVATE_KEY=your_private_key
+
+# API BSCScan pour verification
+BSCSCAN_API_KEY=your_api_key
+
+# Rapport de gas
+REPORT_GAS=true
 ```
 
-**Error: nonce too high**
+### Variables d'environnement (mining-nextjs/.env.local)
+
 ```bash
-# Solution : Reset ton wallet dans Metamask
-# Settings > Advanced > Reset Account
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 ```
 
-**Cannot resolve dependency**
-```bash
-# Solution : Nettoyer et réinstaller
-rm -rf node_modules
-pnpm install
-```
+## Reseaux supportes
 
-## 📚 Ressources utiles
+| Reseau | Chain ID | Usage |
+|--------|----------|-------|
+| Hardhat Local | 1337 | Developpement |
+| BSC Testnet | 97 | Tests |
+| BSC Mainnet | 56 | Production |
 
-- [Documentation Hardhat](https://hardhat.org/docs)
-- [OpenZeppelin Contracts](https://docs.openzeppelin.com/contracts/)
-- [BSC Documentation](https://docs.bnbchain.org/)
-- [Ethers.js Guide](https://docs.ethers.io/)
+## License
 
-## 🤝 Contribution
+MIT
 
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/amazing-feature`)
-3. Commit les changements (`git commit -m 'Add amazing feature'`)
-4. Push vers la branche (`git push origin feature/amazing-feature`)
-5. Ouvrir une Pull Request
+## Avertissement
 
-## 📄 License
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
-## 👨‍💻 Auteur
-
-Créé avec ❤️ pour la blockchain
-
----
-
-## 🚨 Avertissement
-
-⚠️ **Ce code est à des fins éducatives.** Avant tout déploiement en production :
-- Fais auditer tes smart contracts
-- Teste extensivement sur testnet
-- Comprends les risques financiers
-- Utilise un wallet dédié pour les tests
-
-**Les cryptomonnaies sont volatiles. Ne jamais investir plus que ce que tu peux te permettre de perdre.** 🚨
+Ce code est a des fins educatives. Avant deploiement en production:
+- Faire auditer les smart contracts
+- Tester extensivement sur testnet
+- Comprendre les risques financiers

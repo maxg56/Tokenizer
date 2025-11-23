@@ -6,9 +6,13 @@
   "scripts": {
     "test": "pnpm exec hardhat test",
     "compile": "pnpm exec hardhat compile",
-    "deploy:local": "pnpm exec hardhat run scripts/deploy.ts --network localhost",
-    "deploy:bsctest": "pnpm exec hardhat run scripts/deploy.ts --network bsctest",
-    "node": "pnpm exec hardhat node"
+    "coverage": "pnpm exec hardhat coverage",
+    "node": "pnpm exec hardhat node",
+    "deploy:local": "pnpm exec hardhat run scripts/deployAll.ts --network localhost",
+    "deploy:bsctest": "pnpm exec hardhat run scripts/deployAll.ts --network bsctest",
+    "deploy:bsc": "pnpm exec hardhat run scripts/deployAll.ts --network bsc",
+    "deploy:mining:local": "pnpm exec hardhat run scripts/deployMining.ts --network localhost",
+    "deploy:token:local": "pnpm exec hardhat run scripts/deploy.ts --network localhost"
   },
   "keywords": ["ethereum", "solidity", "erc20", "token", "typescript", "hardhat"],
   "author": "",

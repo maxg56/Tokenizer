@@ -102,41 +102,35 @@ describe("Mining System", function () {
     });
 
     it("Should mine blocks with valid proof-of-work", async function () {
-      const { miningContract, token, miner1 } = await loadFixture(deployMiningSystemFixture);
+      const { miningContract, token, miner1, owner } = await loadFixture(deployMiningSystemFixture);
 
       await miningContract.connect(miner1).startMining(50);
 
-      // Trouver un nonce valide
-      let nonce = 0;
-      let isValid = false;
+      // Baisser la difficulté à 100 pour faciliter le test
+      // (plus la difficulté est basse, plus la target est haute, donc plus facile à satisfaire)
+      await miningContract.connect(owner).setDifficulty(100);
 
-      while (!isValid && nonce < 100000) {
-        const hash = ethers.keccak256(
-          ethers.AbiCoder.defaultAbiCoder().encode(
-            ["uint256", "address", "uint256", "uint256"],
-            [1, miner1.address, nonce, await ethers.provider.getBlock("latest").then(b => b?.timestamp)]
-          )
-        );
+      const initialBalance = await token.balanceOf(miner1.address);
 
-        const hashValue = BigInt(hash);
-        const target = BigInt(2) ** BigInt(256) / BigInt(1000); // difficulty = 1000
-
-        if (hashValue < target) {
-          isValid = true;
-        } else {
-          nonce++;
+      // Tester plusieurs nonces jusqu'à trouver un valide
+      // Avec une difficulté de 100, on a ~1% de chance par nonce
+      let mined = false;
+      for (let nonce = 0; nonce < 1000 && !mined; nonce++) {
+        try {
+          await miningContract.connect(miner1).mineBlock(nonce);
+          mined = true;
+        } catch {
+          // Nonce invalide, essayer le suivant
         }
       }
 
-      if (isValid) {
-        const initialBalance = await token.balanceOf(miner1.address);
+      expect(mined).to.be.true;
 
-        await expect(miningContract.connect(miner1).mineBlock(nonce))
-          .to.emit(miningContract, "BlockMined");
+      const finalBalance = await token.balanceOf(miner1.address);
+      expect(finalBalance).to.be.gt(initialBalance);
 
-        const finalBalance = await token.balanceOf(miner1.address);
-        expect(finalBalance).to.be.gt(initialBalance);
-      }
+      // Vérifier que le bloc a été enregistré
+      expect(await miningContract.currentBlock()).to.equal(2);
     });
 
     it("Should reject invalid proof-of-work", async function () {
