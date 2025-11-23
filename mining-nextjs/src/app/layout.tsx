@@ -21,8 +21,6 @@ export const metadata: Metadata = {
   description: 'Mine MaxToken42 (MTK42) with our advanced web3 mining interface',
   keywords: ['blockchain', 'mining', 'cryptocurrency', 'MaxToken42', 'MTK42', 'BSC'],
   authors: [{ name: 'MaxToken42 Team' }],
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#06b6d4',
   openGraph: {
     title: 'MaxToken42 Mining Platform',
     description: 'The next generation of token mining on BSC',

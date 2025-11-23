@@ -9,7 +9,8 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const navItems = [
-    { label: 'Minage', href: '#mining' },
+    { label: 'Minage', href: '/' },
+    { label: 'Token Info', href: '/token-info' },
     { label: 'Statistiques', href: '#stats' },
     { label: 'Récompenses', href: '#rewards' },
   ]

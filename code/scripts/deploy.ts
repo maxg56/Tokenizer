@@ -6,7 +6,7 @@ async function main() {
   console.log("🚀 Deploying Token42 with account:", deployer.address);
   console.log("💰 Account balance:", ethers.formatEther(await deployer.provider.getBalance(deployer.address)));
 
-  const INITIAL_SUPPLY = 1_000_000; // 1 million tokens
+  const INITIAL_SUPPLY = ethers.parseEther("1000000"); // 1 million tokens with 18 decimals
 
   // Déployer le contrat MaxToken42
   const MaxToken42 = await ethers.getContractFactory("MaxToken42");

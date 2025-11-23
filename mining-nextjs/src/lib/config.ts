@@ -1,9 +1,7 @@
 import { http, createConfig } from 'wagmi'
 import { bsc, bscTestnet, localhost } from 'wagmi/chains'
-import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
+import { coinbaseWallet, injected } from 'wagmi/connectors'
 
-// Configuration du projet
-export const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID' // Remplacer par votre ID WalletConnect
 
 // Configuration des chaînes
 export const config = createConfig({
@@ -11,7 +9,6 @@ export const config = createConfig({
   connectors: [
     injected(),
     coinbaseWallet(),
-    walletConnect({ projectId }),
   ],
   transports: {
     [localhost.id]: http(),
@@ -22,7 +19,7 @@ export const config = createConfig({
 
 // Configuration du contrat MaxToken42Mining
 export const TOKEN_CONFIG = {
-  address: '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}`, // Adresse déployée localement
+  address: '0x0165878A594ca255338adfa4d48449f69242Eb8F' as `0x${string}`, // Adresse déployée localement
   abi: [
     // ABI du contrat ERC20 avec minting
     'function name() view returns (string)',
