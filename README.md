@@ -9,7 +9,6 @@ Ce projet contient :
 - **MiningContract** : Systeme de minage proof-of-work avec rewards et bonus
 - **Faucet** : Distribution gratuite de tokens pour testnets
 - **MultiSigWallet** : Portefeuille multi-signatures pour la gouvernance
-- **Frontend Next.js** : Interface web avec wagmi + RainbowKit
 
 ## Stack technique
 
@@ -18,8 +17,7 @@ Ce projet contient :
 | Smart Contracts | Solidity 0.8.20, OpenZeppelin 5.0 |
 | Framework | Hardhat 2.x |
 | Tests | TypeScript, Chai, Mocha |
-| Frontend | Next.js 15, React 19, Tailwind CSS |
-| Web3 | wagmi, viem, ethers.js 6, RainbowKit |
+| Web3 | ethers.js 6 |
 | CI/CD | GitHub Actions |
 
 ## Structure du projet
@@ -36,13 +34,8 @@ Tokenizer/
 │   ├── test/                      # Tests unitaires (64 tests)
 │   ├── scripts/                   # Scripts de deploiement
 │   └── hardhat.config.ts
-├── mining-nextjs/                 # Frontend Next.js
-│   ├── src/
-│   │   ├── app/                   # Pages
-│   │   ├── components/            # Composants React
-│   │   ├── hooks/                 # Hooks custom
-│   │   └── lib/                   # Config et utilitaires
-│   └── package.json
+├── deployment/                    # Documentation de deploiement
+├── documentation/                 # Documentation additionnelle
 ├── .github/workflows/ci.yml       # GitHub Actions CI
 └── README.md
 ```
@@ -54,21 +47,13 @@ Tokenizer/
 - pnpm >= 9
 - Git
 
-### Backend (Smart Contracts)
+### Smart Contracts
 
 ```bash
 cd code
 pnpm install
 pnpm compile
 pnpm test          # 64 tests
-```
-
-### Frontend
-
-```bash
-cd mining-nextjs
-pnpm install
-pnpm dev           # http://localhost:3000
 ```
 
 ## Deploiement
@@ -185,9 +170,7 @@ Le projet inclut une GitHub Action (`.github/workflows/ci.yml`) qui:
 1. Compile les contrats
 2. Execute les tests
 3. Genere un rapport de couverture
-4. Lint le frontend
-5. Build le frontend
-6. Scan de securite avec Slither
+4. Scan de securite avec Slither
 
 ## Securite
 
@@ -206,7 +189,7 @@ Le projet inclut une GitHub Action (`.github/workflows/ci.yml`) qui:
 ## Scripts disponibles
 
 ```bash
-# Backend (code/)
+# Dans code/
 pnpm compile         # Compiler les contrats
 pnpm test            # Lancer les tests
 pnpm coverage        # Rapport de couverture
@@ -214,11 +197,6 @@ pnpm node            # Noeud local Hardhat
 pnpm deploy:local    # Deployer localement
 pnpm deploy:bsctest  # Deployer sur BSC Testnet
 pnpm deploy:bsc      # Deployer sur BSC Mainnet
-
-# Frontend (mining-nextjs/)
-pnpm dev             # Serveur de dev
-pnpm build           # Build production
-pnpm lint            # Linter
 ```
 
 ## Configuration
@@ -234,12 +212,6 @@ BSCSCAN_API_KEY=your_api_key
 
 # Rapport de gas
 REPORT_GAS=true
-```
-
-### Variables d'environnement (mining-nextjs/.env.local)
-
-```bash
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 ```
 
 ## Reseaux supportes

@@ -7,8 +7,10 @@ Système de minage complet pour MaxToken42 avec smart contracts Solidity et inte
 ### Contrats intelligents
 
 1. **MaxToken42Mining.sol** - Token ERC20 avec capacité de mint
-2. **MiningContractV2.sol** - Contrat de minage avec proof-of-work
+2. **MiningContract.sol** - Contrat de minage avec proof-of-work
 3. **Token42.sol** - Version basique originale (conservée pour référence)
+4. **Faucet.sol** - Faucet pour distribution de tokens de test
+5. **MultiSigWallet.sol** - Wallet multi-signature pour la gouvernance
 
 ## 🔧 Fonctionnalités du système de minage
 
@@ -49,11 +51,14 @@ pnpm install
 
 ### Déploiement
 ```bash
+# Local (démarrer un noeud hardhat d'abord avec `pnpm node`)
+pnpm deploy:mining:local
+
 # BSC Testnet
-pnpm exec hardhat run scripts/deployMining.ts --network bsctest
+pnpm deploy:bsctest
 
 # BSC Mainnet
-pnpm exec hardhat run scripts/deployMining.ts --network bsc
+pnpm deploy:bsc
 ```
 
 ### Exemple de sortie
@@ -77,6 +82,12 @@ pnpm exec hardhat run scripts/deployMining.ts --network bsc
 ```bash
 pnpm test
 ```
+
+### Tests disponibles
+- `Token42.test.ts` - Tests du token ERC20
+- `MiningContract.test.ts` - Tests du système de minage
+- `Faucet.test.ts` - Tests du faucet
+- `MultiSigWallet.test.ts` - Tests du wallet multi-signature
 
 ### Tests couverts
 - ✅ Déploiement des contrats

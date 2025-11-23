@@ -1,272 +1,308 @@
-# 📋 Documentation des Smart Contracts
+# Documentation des Smart Contracts
 
-Documentation technique détaillée des contrats Solidity du projet Tokenizer42.
+Documentation technique des contrats Solidity du projet Tokenizer42.
 
-## 📊 Vue d'ensemble
+## Vue d'ensemble
 
-Le projet contient deux smart contracts principaux :
-- **Token42.sol** : Token ERC20 standard
-- **MultiSig42.sol** : Contrat de multisignature
-
----
-
-## 🪙 Token42.sol - Token ERC20
-
-### Description
-Token ERC20 standard basé sur OpenZeppelin avec un supply fixe de 1 million de tokens.
-
-### Caractéristiques techniques
-
-| Propriété | Valeur | Description |
-|-----------|--------|-------------|
-| **Nom** | Token42 | Nom complet du token |
-| **Symbole** | TK42 | Symbole de trading |
-| **Décimales** | 18 | Précision (standard ERC20) |
-| **Supply total** | 1,000,000 TK42 | Supply fixe au déploiement |
-| **Mintable** | ❌ Non | Aucune fonction de création |
-| **Burnable** | ❌ Non | Aucune fonction de destruction |
-| **Pausable** | ❌ Non | Pas de mécanisme de pause |
-| **Ownable** | ❌ Non | Pas de propriétaire privilégié |
-
-### Code source
-
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-contract Token42 is ERC20 {
-    constructor(uint256 initialSupply) ERC20("Token42", "TK42") {
-        _mint(msg.sender, initialSupply * 10 ** decimals());
-    }
-}
-```
-
-### Fonctions héritées (OpenZeppelin ERC20)
-
-#### Fonctions de lecture
-
-| Fonction | Paramètres | Retour | Description |
-|----------|------------|--------|-------------|
-| `name()` | - | `string` | Retourne "Token42" |
-| `symbol()` | - | `string` | Retourne "TK42" |
-| `decimals()` | - | `uint8` | Retourne 18 |
-| `totalSupply()` | - | `uint256` | Supply total en wei |
-| `balanceOf(address)` | `account` | `uint256` | Solde d'un compte |
-| `allowance(address,address)` | `owner, spender` | `uint256` | Allowance autorisée |
-
-#### Fonctions d'écriture
-
-| Fonction | Paramètres | Description |
-|----------|------------|-------------|
-| `transfer(address,uint256)` | `to, amount` | Transférer des tokens |
-| `approve(address,uint256)` | `spender, amount` | Approuver une allowance |
-| `transferFrom(address,address,uint256)` | `from, to, amount` | Transfert délégué |
-
-### Événements émis
-
-```solidity
-event Transfer(address indexed from, address indexed to, uint256 value);
-event Approval(address indexed owner, address indexed spender, uint256 value);
-```
-
-### Sécurité
-
-#### ✅ Points forts
-- **OpenZeppelin** : Utilise des contrats audités et sécurisés
-- **Supply fixe** : Pas de risque d'inflation incontrôlée
-- **Simplicité** : Code minimal, moins de surface d'attaque
-- **Standard ERC20** : Compatible avec tous les wallets et DEX
-
-#### ⚠️ Considérations
-- **Pas de burn** : Les tokens ne peuvent pas être détruits
-- **Pas de pause** : Impossible d'arrêter les transferts
-- **Décentralisé** : Aucun contrôle administrateur après déploiement
-
-### Gas costs (estimations)
-
-| Opération | Gas estimé | Description |
-|-----------|------------|-------------|
-| **Déploiement** | ~500,000 | Création du contrat |
-| **Transfer** | ~21,000 | Transfert simple |
-| **Approve** | ~22,000 | Approbation |
-| **TransferFrom** | ~23,000 | Transfert délégué |
+Le projet contient quatre smart contracts :
+- **MaxToken42Mining.sol** : Token ERC20 avec support de minage
+- **MiningContract.sol** : Contrat de minage proof-of-work
+- **Faucet.sol** : Distribution de tokens pour testnets
+- **MultiSigWallet.sol** : Portefeuille multi-signatures
 
 ---
 
-## 🔐 MultiSig42.sol - Contrat MultiSig
+## MaxToken42Mining.sol - Token ERC20 Minable
 
 ### Description
-Contrat de multisignature permettant de sécuriser des transactions importantes en nécessitant l'approbation de plusieurs signataires.
+Token ERC20 avec supply limitee, support de minage via roles et fonction burn.
 
-### Caractéristiques principales
+### Caracteristiques techniques
 
-| Propriété | Valeur | Description |
+| Propriete | Valeur | Description |
 |-----------|--------|-------------|
-| **Signataires max** | Configurable | Défini au déploiement |
-| **Seuil requis** | Configurable | Nombre de signatures nécessaires |
-| **Timelock** | Optionnel | Délai avant exécution |
-| **Révocation** | ✅ Oui | Possibilité d'annuler une transaction |
-
-### Architecture
-
-```
-MultiSig42
-├── Gestion des signataires
-├── Soumission de transactions
-├── Approbation/Révocation
-└── Exécution sécurisée
-```
+| **Nom** | MaxToken42 | Nom complet du token |
+| **Symbole** | MTK42 | Symbole de trading |
+| **Decimales** | 18 | Precision (standard ERC20) |
+| **Supply initial** | 1,000,000 MTK42 | Au deploiement |
+| **Supply max** | 10,000,000 MTK42 | Limite absolue |
+| **Mintable** | Oui (MINER_ROLE) | Via contrat de minage |
+| **Burnable** | Oui | Chacun peut bruler ses tokens |
+| **Pausable** | Non | Pas de mecanisme de pause |
 
 ### Fonctions principales
 
-#### Gestion des signataires
+#### Lecture
+
+| Fonction | Retour | Description |
+|----------|--------|-------------|
+| `name()` | `string` | Retourne "MaxToken42" |
+| `symbol()` | `string` | Retourne "MTK42" |
+| `decimals()` | `uint8` | Retourne 18 |
+| `totalSupply()` | `uint256` | Supply actuel en wei |
+| `MAX_SUPPLY()` | `uint256` | 10M MTK42 en wei |
+| `remainingSupply()` | `uint256` | Tokens restants a minter |
+| `canMint(address)` | `bool` | Verifie si l'adresse peut minter |
+
+#### Ecriture
+
+| Fonction | Acces | Description |
+|----------|-------|-------------|
+| `transfer(to, amount)` | Public | Transfert standard |
+| `mint(to, amount)` | MINER_ROLE | Creer des tokens |
+| `burn(amount)` | Public | Bruler ses propres tokens |
+| `addMiner(address)` | Owner | Ajouter un mineur autorise |
+| `removeMiner(address)` | Owner | Retirer un mineur |
+
+### Evenements
 
 ```solidity
-function addOwner(address owner) external
-function removeOwner(address owner) external
-function replaceOwner(address oldOwner, address newOwner) external
-function changeRequirement(uint requirement) external
+event TokenDeployed(address indexed owner, uint256 initialSupply, uint256 maxSupply);
+event TokensMinted(address indexed to, uint256 amount);
+event TokensBurned(address indexed from, uint256 amount);
+event MinerAdded(address indexed miner);
+event MinerRemoved(address indexed miner);
 ```
 
-#### Gestion des transactions
+### Securite
 
-```solidity
-function submitTransaction(address destination, uint value, bytes data) external
-function confirmTransaction(uint transactionId) external
-function revokeConfirmation(uint transactionId) external
-function executeTransaction(uint transactionId) external
-```
-
-### États des transactions
-
-| État | Description |
-|------|-------------|
-| **Pending** | En attente de signatures |
-| **Executed** | Exécutée avec succès |
-| **Failed** | Échec d'exécution |
-
-### Événements
-
-```solidity
-event Confirmation(address indexed sender, uint indexed transactionId);
-event Revocation(address indexed sender, uint indexed transactionId);
-event Submission(uint indexed transactionId);
-event Execution(uint indexed transactionId);
-event ExecutionFailure(uint indexed transactionId);
-```
-
-### Cas d'usage recommandés
-
-#### 🎯 Treasury management
-- Gestion des fonds du projet
-- Transferts importants
-- Paiements aux équipes
-
-#### 🔧 Governance
-- Modifications de paramètres
-- Mises à jour de contrats
-- Décisions stratégiques
-
-#### 🛡️ Sécurité
-- Protection contre les clés compromises
-- Validation collective
-- Audit trail transparent
+- **AccessControl** : Seuls les MINER_ROLE peuvent minter
+- **Supply cap** : Impossible de depasser MAX_SUPPLY
+- **OpenZeppelin** : Base sur des contrats audites
 
 ---
 
-## 🧪 Tests et vérification
+## MiningContract.sol - Systeme de Minage
 
-### Couverture des tests
+### Description
+Contrat de minage proof-of-work avec recompenses, bonus et ajustement de difficulte.
 
-#### Token42
-- ✅ Déploiement correct
-- ✅ Supply et allocation initiale
-- ✅ Transferts standards
-- ✅ Système d'allowances
-- ✅ Gestion des erreurs
-- ✅ Émission d'événements
+### Caracteristiques
 
-#### MultiSig42
-- ✅ Gestion des propriétaires
-- ✅ Soumission de transactions
-- ✅ Processus d'approbation
-- ✅ Exécution sécurisée
-- ✅ Révocation de signatures
+| Propriete | Valeur | Description |
+|-----------|--------|-------------|
+| **Recompense de base** | 100 MTK42 | Par bloc mine |
+| **Difficulte initiale** | 1000 | Ajustable automatiquement |
+| **Temps de bloc** | 5 minutes | Cible |
+| **Halving** | 210,000 blocs | Division par 2 de la recompense |
+| **Bonus quotidien** | 50 MTK42 | Pour mineurs actifs |
 
-### Scénarios de test
+### Fonctions principales
+
+#### Minage
+
+| Fonction | Description |
+|----------|-------------|
+| `startMining(power)` | Demarrer le minage (power: 1-100%) |
+| `stopMining()` | Arreter le minage |
+| `mineBlock(nonce)` | Soumettre une preuve de travail |
+| `claimDailyBonus()` | Reclamer le bonus quotidien |
+
+#### Lecture
+
+| Fonction | Description |
+|----------|-------------|
+| `getMinerStats(address)` | Statistiques d'un mineur |
+| `getGlobalStats()` | Statistiques globales |
+| `getCurrentReward()` | Recompense actuelle (avec halving) |
+| `calculateReward(address)` | Recompense estimee pour un mineur |
+
+### Proof-of-Work
+
+```solidity
+bytes32 hash = keccak256(abi.encodePacked(
+    currentBlock,
+    msg.sender,
+    nonce,
+    block.timestamp
+));
+uint256 target = type(uint256).max / difficulty;
+require(uint256(hash) < target, "Invalid proof-of-work");
+```
+
+### Evenements
+
+```solidity
+event MiningStarted(address indexed miner, uint256 power);
+event MiningStopped(address indexed miner);
+event BlockMined(address indexed miner, uint256 indexed blockNumber, uint256 reward, uint256 difficulty, bytes32 hash);
+event DifficultyAdjusted(uint256 oldDifficulty, uint256 newDifficulty);
+event DailyBonusClaimed(address indexed miner, uint256 amount);
+```
+
+---
+
+## Faucet.sol - Distribution de Tokens
+
+### Description
+Faucet pour distribuer des tokens MTK42 aux utilisateurs sur testnet.
+
+### Configuration
+
+| Propriete | Valeur | Description |
+|-----------|--------|-------------|
+| **Montant par demande** | 100 MTK42 | Configurable |
+| **Cooldown** | 24 heures | Entre chaque demande |
+| **Limite quotidienne** | 1000 demandes | Par jour |
+
+### Fonctions principales
+
+| Fonction | Acces | Description |
+|----------|-------|-------------|
+| `drip()` | Public | Demander des tokens |
+| `canDrip(address)` | Public | Verifier eligibilite |
+| `getStats()` | Public | Statistiques du faucet |
+| `getUserStats(address)` | Public | Statistiques utilisateur |
+| `fund(amount)` | Public | Financer le faucet |
+| `setDripAmount(amount)` | Owner | Modifier le montant |
+| `setCooldownTime(time)` | Owner | Modifier le cooldown |
+| `pause() / unpause()` | Owner | Pause d'urgence |
+
+### Evenements
+
+```solidity
+event TokensDripped(address indexed recipient, uint256 amount);
+event FaucetFunded(address indexed funder, uint256 amount);
+event DripAmountUpdated(uint256 oldAmount, uint256 newAmount);
+event CooldownUpdated(uint256 oldCooldown, uint256 newCooldown);
+```
+
+---
+
+## MultiSigWallet.sol - Portefeuille Multi-Signatures
+
+### Description
+Portefeuille necessitant plusieurs signatures pour executer des transactions.
+
+### Caracteristiques
+
+| Propriete | Description |
+|-----------|-------------|
+| **Signataires** | Configurable au deploiement |
+| **Seuil requis** | Nombre de confirmations necessaires |
+| **Revocation** | Possibilite d'annuler sa confirmation |
+| **Gouvernance** | Ajout/suppression de signataires |
+
+### Fonctions principales
+
+#### Transactions
+
+| Fonction | Description |
+|----------|-------------|
+| `submitTransaction(to, value, data)` | Proposer une transaction |
+| `confirmTransaction(txIndex)` | Confirmer une transaction |
+| `revokeConfirmation(txIndex)` | Revoquer sa confirmation |
+| `executeTransaction(txIndex)` | Executer si assez de signatures |
+
+#### Gouvernance
+
+| Fonction | Description |
+|----------|-------------|
+| `addOwner(address)` | Ajouter un signataire |
+| `removeOwner(address)` | Retirer un signataire |
+| `changeRequirement(required)` | Modifier le seuil |
+
+### Evenements
+
+```solidity
+event SubmitTransaction(address indexed owner, uint256 indexed txIndex, address indexed to, uint256 value, bytes data);
+event ConfirmTransaction(address indexed owner, uint256 indexed txIndex);
+event RevokeConfirmation(address indexed owner, uint256 indexed txIndex);
+event ExecuteTransaction(address indexed owner, uint256 indexed txIndex);
+event OwnerAdded(address indexed owner);
+event OwnerRemoved(address indexed owner);
+event RequirementChanged(uint256 required);
+```
+
+---
+
+## Tests
+
+### Fichiers de test
+
+| Fichier | Tests | Description |
+|---------|-------|-------------|
+| `Token42.test.ts` | 14 | Token ERC20 de base |
+| `MiningContract.test.ts` | 16 | Systeme de minage |
+| `Faucet.test.ts` | 13 | Distribution de tokens |
+| `MultiSigWallet.test.ts` | 21 | Multi-signatures |
+
+### Commandes
 
 ```bash
-# Lancer tous les tests
+# Tous les tests
 pnpm test
 
-# Tests avec couverture
-pnpm run coverage
+# Avec couverture
+pnpm coverage
 
-# Tests avec rapport gas
+# Avec rapport gas
 REPORT_GAS=true pnpm test
 ```
 
 ---
 
-## 🚀 Déploiement
+## Deploiement
 
-### Paramètres de déploiement
+### Parametres des constructeurs
 
-#### Token42
+#### MaxToken42Mining
 ```solidity
-constructor(uint256 initialSupply)
+constructor(uint256 _initialSupply)
+// _initialSupply: 1000000000000000000000000 (1M en wei)
 ```
-- `initialSupply` : 1000000 (1 million de tokens)
 
-#### MultiSig42
+#### MiningContract
 ```solidity
-constructor(address[] _owners, uint _required)
+constructor(address _token)
+// _token: Adresse du MaxToken42Mining
 ```
-- `_owners` : Array des adresses des signataires
-- `_required` : Nombre de signatures requises
 
-### Vérification sur BSCScan
+#### Faucet
+```solidity
+constructor(address _token)
+// _token: Adresse du MaxToken42Mining
+```
+
+#### MultiSigWallet
+```solidity
+constructor(address[] _owners, uint256 _required)
+// _owners: Tableau des adresses signataires
+// _required: Nombre de signatures requises
+```
+
+### Verification sur BSCScan
 
 ```bash
-# Vérifier Token42
-npx hardhat verify --network bsc <CONTRACT_ADDRESS> 1000000
+# MaxToken42Mining
+pnpm exec hardhat verify --network bsc <ADDRESS> "1000000000000000000000000"
 
-# Vérifier MultiSig42
-npx hardhat verify --network bsc <CONTRACT_ADDRESS> ["0x...", "0x..."] 2
+# MiningContract
+pnpm exec hardhat verify --network bsc <ADDRESS> <TOKEN_ADDRESS>
+
+# Faucet
+pnpm exec hardhat verify --network bsc <ADDRESS> <TOKEN_ADDRESS>
+
+# MultiSigWallet
+pnpm exec hardhat verify --network bsc <ADDRESS> '["0x...", "0x..."]' 2
 ```
 
 ---
 
-## 📚 Ressources complémentaires
+## Securite
 
-### Standards utilisés
-- [EIP-20](https://eips.ethereum.org/EIPS/eip-20) - Standard ERC20
-- [OpenZeppelin ERC20](https://docs.openzeppelin.com/contracts/4.x/erc20)
-- [MultiSig Best Practices](https://blog.openzeppelin.com/on-the-security-of-gnosis-safe-smart-contracts/)
+### Protections implementees
 
-### Outils de développement
-- [Hardhat](https://hardhat.org/) - Framework de développement
-- [OpenZeppelin](https://openzeppelin.com/) - Librairies sécurisées
-- [Ethers.js](https://docs.ethers.io/) - Librairie JavaScript
+| Contrat | Protections |
+|---------|-------------|
+| MaxToken42Mining | AccessControl, Supply cap |
+| MiningContract | ReentrancyGuard, Pausable, Ownable |
+| Faucet | ReentrancyGuard, Pausable, Ownable, Cooldown |
+| MultiSigWallet | ReentrancyGuard, Multi-sig |
 
-### Audit et sécurité
-- [Consensys Best Practices](https://consensys.github.io/smart-contract-best-practices/)
-- [Solidity Security](https://github.com/sigp/solidity-security-blog)
+### Recommandations
 
----
-
-## ⚠️ Avertissements de sécurité
-
-### Token42
-- **Pas de burn** : Les tokens ne peuvent pas être détruits
-- **Supply fixe** : Aucune possibilité d'augmenter le supply
-- **Décentralisé** : Aucun contrôle administrateur
-
-### MultiSig42
-- **Clés de signature** : Sécuriser absolument les clés privées
-- **Seuil de signature** : Choisir un équilibre sécurité/praticité
-- **Test complet** : Tester tous les scénarios avant production
-
-**Recommandation** : Faire auditer les contrats avant tout déploiement en production avec des fonds réels.
+- Faire auditer les contrats avant deploiement mainnet
+- Utiliser un hardware wallet pour les cles de deploiement
+- Tester exhaustivement sur testnet
+- Configurer le MultiSig avec plusieurs signataires de confiance

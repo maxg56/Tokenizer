@@ -1,12 +1,12 @@
 # 🚀 Guide de déploiement - Tokenizer42
 
-Guide complet pour déployer les smart contracts Token42 et MultiSig42 sur différents réseaux.
+Guide complet pour déployer les smart contracts MaxToken42Mining, MiningContract, Faucet et MultiSigWallet sur différents réseaux.
 
 ## 📋 Pré-requis
 
 ### Outils nécessaires
-- **Node.js** ≥ 16.0.0
-- **pnpm** ou npm
+- **Node.js** ≥ 20.0.0
+- **pnpm** ≥ 9
 - **Metamask** ou wallet compatible
 - **Git** pour cloner le projet
 
@@ -78,10 +78,17 @@ pnpm run deploy:local
 
 ### 3. Résultat attendu
 ```
-🚀 Deploying Token42 with account: 0x...
-💰 Account balance: 10000.0 ETH
-✅ Token42 deployed to: 0x5FbDB2315678...
-📊 Initial supply: 1000000 TK42
+============================================================
+MaxToken42 Complete System Deployment
+============================================================
+Deployer: 0x...
+Balance: 10000.0 ETH
+
+Contract Addresses:
+  Token (MTK42):     0x...
+  Mining Contract:   0x...
+  Faucet:            0x...
+  MultiSig Wallet:   0x...
 ```
 
 ### 4. Tester l'intégration
@@ -143,9 +150,11 @@ REPORT_GAS=true pnpm test
 ```
 
 **Estimation des coûts (BSC Mainnet) :**
-- **Token42** : ~0.002 BNB (≈ $0.50)
-- **MultiSig42** : ~0.005 BNB (≈ $1.25)
-- **Total** : ~0.01 BNB (≈ $2.50)
+- **MaxToken42Mining** : ~0.002 BNB (≈ $0.50)
+- **MiningContract** : ~0.003 BNB (≈ $0.75)
+- **Faucet** : ~0.002 BNB (≈ $0.50)
+- **MultiSigWallet** : ~0.005 BNB (≈ $1.25)
+- **Total** : ~0.015 BNB (≈ $3.75)
 
 ### 2. Configuration réseau BSC Mainnet
 
@@ -160,13 +169,19 @@ REPORT_GAS=true pnpm test
 ### 3. Déploiement final
 ```bash
 # ⚠️ ATTENTION : Ceci utilise de vrais BNB !
-pnpm exec hardhat run scripts/deploy.ts --network bsc
+pnpm deploy:bsc
 ```
 
 ### 4. Vérification sur BSCScan
 ```bash
-# Vérifier le contrat (optionnel mais recommandé)
-npx hardhat verify --network bsc <CONTRACT_ADDRESS> 1000000
+# Vérifier le token (avec l'initial supply en wei)
+pnpm exec hardhat verify --network bsc <TOKEN_ADDRESS> "1000000000000000000000000"
+
+# Vérifier le MiningContract (avec l'adresse du token)
+pnpm exec hardhat verify --network bsc <MINING_ADDRESS> <TOKEN_ADDRESS>
+
+# Vérifier le Faucet (avec l'adresse du token)
+pnpm exec hardhat verify --network bsc <FAUCET_ADDRESS> <TOKEN_ADDRESS>
 ```
 
 ---
@@ -178,33 +193,41 @@ npx hardhat verify --network bsc <CONTRACT_ADDRESS> 1000000
 - **Confiance** : Les utilisateurs peuvent vérifier le code
 - **Interaction** : Interface BSCScan pour interagir avec le contrat
 
-### Token42
+### MaxToken42Mining
 ```bash
-npx hardhat verify --network bsctest <TOKEN_ADDRESS> 1000000
+pnpm exec hardhat verify --network bsctest <TOKEN_ADDRESS> "1000000000000000000000000"
 ```
 
-### MultiSig42
+### MultiSigWallet
 ```bash
-npx hardhat verify --network bsctest <MULTISIG_ADDRESS> \
-  ["0xSignataire1", "0xSignataire2", "0xSignataire3"] 2
+pnpm exec hardhat verify --network bsctest <MULTISIG_ADDRESS> \
+  '["0xSignataire1", "0xSignataire2", "0xSignataire3"]' 2
 ```
 
 ### Exemple de vérification réussie
 ```
 Successfully submitted source code for contract
-contracts/Token42.sol:Token42 at 0x1234...
+contracts/MaxToken42Mining.sol:MaxToken42Mining at 0x1234...
 for verification on the block explorer.
 Waiting for verification result...
 
-Successfully verified contract Token42 on Etherscan.
+Successfully verified contract MaxToken42Mining on BSCScan.
 https://testnet.bscscan.com/address/0x1234...#code
 ```
 
 ---
 
-## 📊 Scripts de déploiement avancés
+## 📊 Scripts de déploiement
 
-### Script personnalisé MultiSig
+Le projet inclut plusieurs scripts de déploiement :
+
+| Script | Commande | Description |
+|--------|----------|-------------|
+| `deployAll.ts` | `pnpm deploy:local` | Déploie tous les contrats (Token, Mining, Faucet, MultiSig) |
+| `deployMining.ts` | `pnpm deploy:mining:local` | Déploie uniquement Token + Mining |
+| `deploy.ts` | `pnpm deploy:token:local` | Déploie uniquement le Token |
+
+### Exemple : Déploiement personnalisé MultiSig
 ```typescript
 // scripts/deploy-multisig.ts
 import { ethers } from "hardhat";
@@ -212,7 +235,7 @@ import { ethers } from "hardhat";
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  // Adresses des signataires
+  // Adresses des signataires (production)
   const owners = [
     "0x...", // Signataire 1
     "0x...", // Signataire 2
@@ -221,33 +244,14 @@ async function main() {
 
   const requiredSignatures = 2; // 2 sur 3
 
-  const MultiSig42 = await ethers.getContractFactory("MultiSig42");
-  const multisig = await MultiSig42.deploy(owners, requiredSignatures);
+  const MultiSigWallet = await ethers.getContractFactory("MultiSigWallet");
+  const multisig = await MultiSigWallet.deploy(owners, requiredSignatures);
 
   await multisig.waitForDeployment();
 
-  console.log("🔐 MultiSig42 deployed:", await multisig.getAddress());
+  console.log("🔐 MultiSigWallet deployed:", await multisig.getAddress());
   console.log("👥 Owners:", owners.length);
   console.log("✅ Required signatures:", requiredSignatures);
-}
-```
-
-### Script de déploiement complet
-```typescript
-// scripts/deploy-all.ts
-async function deployAll() {
-  // 1. Déployer Token42
-  const token = await deployToken42(1_000_000);
-
-  // 2. Déployer MultiSig42
-  const multisig = await deployMultiSig42(owners, 2);
-
-  // 3. Transférer une partie des tokens au MultiSig
-  await token.transfer(multisig.address, parseUnits("500000", 18));
-
-  console.log("🎉 Déploiement complet terminé !");
-  console.log("Token42:", token.address);
-  console.log("MultiSig42:", multisig.address);
 }
 ```
 
@@ -279,21 +283,28 @@ async function deployAll() {
 #### "Reverted with reason string 'xxx'"
 ```bash
 # Solution : Vérifier les paramètres du constructeur
-# Token42 : initialSupply doit être > 0
-# MultiSig42 : owners.length >= required && required > 0
+# MaxToken42Mining : initialSupply doit être > 0
+# MultiSigWallet : owners.length >= required && required > 0
 ```
 
 ### Logs de déploiement
 
 #### Succès ✅
 ```
-🚀 Deploying Token42 with account: 0x742d35Cc6523...
-💰 Account balance: 0.1 BNB
-⛽ Gas price: 5 gwei
-✅ Token42 deployed to: 0x1234567890abcdef...
-📊 Initial supply: 1000000 TK42
-🔗 Transaction: 0xabcdef1234567890...
-⏱️  Deployment time: 15 seconds
+============================================================
+MaxToken42 Complete System Deployment
+============================================================
+Deployer: 0x742d35Cc6523...
+Balance: 0.1 BNB
+
+Contract Addresses:
+  Token (MTK42):     0x1234...
+  Mining Contract:   0x5678...
+  Faucet:            0x9abc...
+  MultiSig Wallet:   0xdef0...
+
+Deployment completed successfully!
+============================================================
 ```
 
 #### Échec ❌
@@ -318,12 +329,12 @@ async function deployAll() {
 #### 2. Tests de validation
 ```bash
 # Tester les fonctions de base
-npx hardhat console --network bsctest
+pnpm exec hardhat console --network bsctest
 
 # Dans la console :
-const token = await ethers.getContractAt("Token42", "0x...");
-await token.name(); // "Token42"
-await token.symbol(); // "TK42"
+const token = await ethers.getContractAt("MaxToken42Mining", "0x...");
+await token.name(); // "MaxToken42"
+await token.symbol(); // "MTK42"
 await token.totalSupply(); // "1000000000000000000000000"
 ```
 
