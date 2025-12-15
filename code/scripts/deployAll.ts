@@ -1,166 +1,329 @@
 import { ethers } from "hardhat";
-import { trackDeployment, createDeploymentInfo } from "./utils/deploymentTracker";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { trackDeployment, createDeploymentInfo, Deployment } from "./utils/deploymentTracker";
 
-async function main() {
-  const [deployer] = await ethers.getSigners();
+// =============================================================================
+// Types
+// =============================================================================
 
-  console.log("=".repeat(60));
-  console.log("MaxToken42 Complete System Deployment");
-  console.log("=".repeat(60));
-  console.log(`Deployer: ${deployer.address}`);
-  console.log(`Balance: ${ethers.formatEther(await ethers.provider.getBalance(deployer.address))} ETH`);
-  console.log("");
+interface DeploymentConfig {
+  initialSupply: bigint;
+  faucetFunding: bigint;
+  multiSigOwners: string[];
+  requiredConfirmations: number;
+}
 
-  // === 1. Deploy Token ===
-  console.log("1. Deploying MaxToken42Mining Token...");
-  const initialSupply = ethers.parseEther("1000000"); // 1M tokens
+interface DeployedContracts {
+  token: {
+    address: string;
+    contract: Awaited<ReturnType<typeof ethers.deployContract>>;
+  };
+  mining: {
+    address: string;
+    contract: Awaited<ReturnType<typeof ethers.deployContract>>;
+  };
+  faucet: {
+    address: string;
+    contract: Awaited<ReturnType<typeof ethers.deployContract>>;
+  };
+  multiSig: {
+    address: string;
+    contract: Awaited<ReturnType<typeof ethers.deployContract>>;
+  };
+}
+
+interface NetworkInfo {
+  chainId: number;
+  name: string;
+}
+
+// =============================================================================
+// Logger Utility
+// =============================================================================
+
+const Logger = {
+  separator: () => console.log("=".repeat(60)),
+  blank: () => console.log(""),
+  header: (title: string) => {
+    Logger.separator();
+    console.log(title);
+    Logger.separator();
+  },
+  step: (num: number, message: string) => console.log(`${num}. ${message}`),
+  info: (message: string) => console.log(`   ${message}`),
+  success: (message: string) => console.log(`   ${message}`),
+  section: (title: string, items: Record<string, string>) => {
+    console.log(`${title}:`);
+    Object.entries(items).forEach(([key, value]) => {
+      console.log(`  ${key.padEnd(16)} ${value}`);
+    });
+  },
+};
+
+// =============================================================================
+// Configuration
+// =============================================================================
+
+function loadConfig(deployerAddress: string): DeploymentConfig {
+  return {
+    initialSupply: ethers.parseEther("1000000"),      // 1M tokens
+    faucetFunding: ethers.parseEther("100000"),       // 100K tokens
+    multiSigOwners: [deployerAddress],
+    requiredConfirmations: 1,
+  };
+}
+
+// =============================================================================
+// Deployment Functions
+// =============================================================================
+
+async function deployToken(config: DeploymentConfig): Promise<DeployedContracts["token"]> {
+  Logger.step(1, "Deploying MaxToken42Mining Token...");
+
   const MaxToken42Mining = await ethers.getContractFactory("MaxToken42Mining");
-  const token = await MaxToken42Mining.deploy(initialSupply);
+  const token = await MaxToken42Mining.deploy(config.initialSupply);
   await token.waitForDeployment();
-  const tokenAddress = await token.getAddress();
-  console.log(`   Token deployed at: ${tokenAddress}`);
-  console.log(`   Initial supply: 1,000,000 MTK42`);
-  console.log(`   Max supply: 10,000,000 MTK42`);
-  console.log("");
+  const address = await token.getAddress();
 
-  // === 2. Deploy Mining Contract ===
-  console.log("2. Deploying MiningContract...");
+  Logger.info(`Token deployed at: ${address}`);
+  Logger.info("Initial supply: 1,000,000 MTK42");
+  Logger.info("Max supply: 10,000,000 MTK42");
+  Logger.blank();
+
+  return { address, contract: token };
+}
+
+async function deployMining(tokenAddress: string): Promise<DeployedContracts["mining"]> {
+  Logger.step(2, "Deploying MiningContract...");
+
   const MiningContract = await ethers.getContractFactory("MiningContract");
   const mining = await MiningContract.deploy(tokenAddress);
   await mining.waitForDeployment();
-  const miningAddress = await mining.getAddress();
-  console.log(`   Mining contract deployed at: ${miningAddress}`);
-  console.log("");
+  const address = await mining.getAddress();
 
-  // Grant MINER_ROLE to mining contract
-  console.log("   Granting MINER_ROLE to mining contract...");
-  const grantTx = await token.addMiner(miningAddress);
-  await grantTx.wait();
-  console.log("   MINER_ROLE granted successfully");
-  console.log("");
+  Logger.info(`Mining contract deployed at: ${address}`);
+  Logger.blank();
 
-  // === 3. Deploy Faucet ===
-  console.log("3. Deploying Faucet...");
+  return { address, contract: mining };
+}
+
+async function deployFaucet(tokenAddress: string): Promise<DeployedContracts["faucet"]> {
+  Logger.step(3, "Deploying Faucet...");
+
   const Faucet = await ethers.getContractFactory("Faucet");
   const faucet = await Faucet.deploy(tokenAddress);
   await faucet.waitForDeployment();
-  const faucetAddress = await faucet.getAddress();
-  console.log(`   Faucet deployed at: ${faucetAddress}`);
-  console.log("");
+  const address = await faucet.getAddress();
 
-  // Fund the faucet
-  console.log("   Funding faucet with 100,000 MTK42...");
-  const faucetFunding = ethers.parseEther("100000");
-  const approveTx = await token.approve(faucetAddress, faucetFunding);
-  await approveTx.wait();
-  const fundTx = await faucet.fund(faucetFunding);
-  await fundTx.wait();
-  console.log("   Faucet funded successfully");
-  console.log("");
+  Logger.info(`Faucet deployed at: ${address}`);
+  Logger.blank();
 
-  // === 4. Deploy MultiSig ===
-  console.log("4. Deploying MultiSigWallet...");
-  // By default, create a 2-of-3 multisig with the deployer
-  // In production, you should add other signers
-  const multiSigOwners = [deployer.address];
-  const requiredConfirmations = 1;
+  return { address, contract: faucet };
+}
+
+async function deployMultiSig(config: DeploymentConfig): Promise<DeployedContracts["multiSig"]> {
+  Logger.step(4, "Deploying MultiSigWallet...");
 
   const MultiSigWallet = await ethers.getContractFactory("MultiSigWallet");
-  const multiSig = await MultiSigWallet.deploy(multiSigOwners, requiredConfirmations);
+  const multiSig = await MultiSigWallet.deploy(
+    config.multiSigOwners,
+    config.requiredConfirmations
+  );
   await multiSig.waitForDeployment();
-  const multiSigAddress = await multiSig.getAddress();
-  console.log(`   MultiSig deployed at: ${multiSigAddress}`);
-  console.log(`   Owners: ${multiSigOwners.join(", ")}`);
-  console.log(`   Required confirmations: ${requiredConfirmations}`);
-  console.log("");
+  const address = await multiSig.getAddress();
 
-  // === Summary ===
-  console.log("=".repeat(60));
-  console.log("DEPLOYMENT SUMMARY");
-  console.log("=".repeat(60));
-  console.log("");
-  console.log("Contract Addresses:");
-  console.log(`  Token (MTK42):     ${tokenAddress}`);
-  console.log(`  Mining Contract:   ${miningAddress}`);
-  console.log(`  Faucet:            ${faucetAddress}`);
-  console.log(`  MultiSig Wallet:   ${multiSigAddress}`);
-  console.log("");
-  console.log("Token Stats:");
-  console.log(`  Name:              MaxToken42`);
-  console.log(`  Symbol:            MTK42`);
-  console.log(`  Decimals:          18`);
-  console.log(`  Initial Supply:    1,000,000 MTK42`);
-  console.log(`  Max Supply:        10,000,000 MTK42`);
-  console.log(`  Faucet Balance:    100,000 MTK42`);
-  console.log("");
-  console.log("Mining Config:");
-  console.log(`  Base Reward:       100 MTK42`);
-  console.log(`  Difficulty:        1000`);
-  console.log(`  Block Time:        300s (5 min)`);
-  console.log(`  Halving Interval:  210,000 blocks`);
-  console.log("");
-  console.log("Faucet Config:");
-  console.log(`  Drip Amount:       100 MTK42`);
-  console.log(`  Cooldown:          24 hours`);
-  console.log(`  Daily Limit:       1000 claims`);
-  console.log("");
+  Logger.info(`MultiSig deployed at: ${address}`);
+  Logger.info(`Owners: ${config.multiSigOwners.join(", ")}`);
+  Logger.info(`Required confirmations: ${config.requiredConfirmations}`);
+  Logger.blank();
 
-  // Get network info
+  return { address, contract: multiSig };
+}
+
+// =============================================================================
+// Initialization Functions
+// =============================================================================
+
+async function grantMinerRole(
+  token: DeployedContracts["token"],
+  miningAddress: string
+): Promise<void> {
+  Logger.info("Granting MINER_ROLE to mining contract...");
+  const tx = await token.contract.addMiner(miningAddress);
+  await tx.wait();
+  Logger.success("MINER_ROLE granted successfully");
+  Logger.blank();
+}
+
+async function fundFaucet(
+  token: DeployedContracts["token"],
+  faucet: DeployedContracts["faucet"],
+  amount: bigint
+): Promise<void> {
+  Logger.info("Funding faucet with 100,000 MTK42...");
+
+  const approveTx = await token.contract.approve(faucet.address, amount);
+  await approveTx.wait();
+
+  const fundTx = await faucet.contract.fund(amount);
+  await fundTx.wait();
+
+  Logger.success("Faucet funded successfully");
+  Logger.blank();
+}
+
+// =============================================================================
+// Summary & Logging
+// =============================================================================
+
+function logDeploymentSummary(contracts: DeployedContracts): void {
+  Logger.header("DEPLOYMENT SUMMARY");
+  Logger.blank();
+
+  Logger.section("Contract Addresses", {
+    "Token (MTK42):": contracts.token.address,
+    "Mining Contract:": contracts.mining.address,
+    "Faucet:": contracts.faucet.address,
+    "MultiSig Wallet:": contracts.multiSig.address,
+  });
+  Logger.blank();
+
+  Logger.section("Token Stats", {
+    "Name:": "MaxToken42",
+    "Symbol:": "MTK42",
+    "Decimals:": "18",
+    "Initial Supply:": "1,000,000 MTK42",
+    "Max Supply:": "10,000,000 MTK42",
+    "Faucet Balance:": "100,000 MTK42",
+  });
+  Logger.blank();
+
+  Logger.section("Mining Config", {
+    "Base Reward:": "100 MTK42",
+    "Difficulty:": "1000",
+    "Block Time:": "300s (5 min)",
+    "Halving:": "210,000 blocks",
+  });
+  Logger.blank();
+
+  Logger.section("Faucet Config", {
+    "Drip Amount:": "100 MTK42",
+    "Cooldown:": "24 hours",
+    "Daily Limit:": "1000 claims",
+  });
+  Logger.blank();
+}
+
+function logDeployerInfo(deployer: HardhatEthersSigner, balance: bigint): void {
+  Logger.header("MaxToken42 Complete System Deployment");
+  console.log(`Deployer: ${deployer.address}`);
+  console.log(`Balance: ${ethers.formatEther(balance)} ETH`);
+  Logger.blank();
+}
+
+// =============================================================================
+// Deployment Tracking
+// =============================================================================
+
+async function getNetworkInfo(): Promise<NetworkInfo> {
   const network = await ethers.provider.getNetwork();
-  const chainId = Number(network.chainId);
-  const networkName = network.name;
+  return {
+    chainId: Number(network.chainId),
+    name: network.name,
+  };
+}
 
-  // Create deployment info for tracking
+function saveDeployment(
+  deployer: string,
+  network: NetworkInfo,
+  contracts: DeployedContracts
+): Deployment {
   const deploymentData = createDeploymentInfo(
-    deployer.address,
-    chainId,
-    networkName,
+    deployer,
+    network.chainId,
+    network.name,
     {
       token: {
         name: "MaxToken42Mining",
-        address: tokenAddress,
-        symbol: "MTK42"
+        address: contracts.token.address,
+        symbol: "MTK42",
       },
       mining: {
         name: "MiningContract",
-        address: miningAddress
+        address: contracts.mining.address,
       },
       faucet: {
         name: "Faucet",
-        address: faucetAddress
+        address: contracts.faucet.address,
       },
       multiSig: {
         name: "MultiSigWallet",
-        address: multiSigAddress
-      }
+        address: contracts.multiSig.address,
+      },
     },
     {
       initialSupply: "1000000",
       maxSupply: "10000000",
       faucetFunding: "100000",
-      miningBaseReward: "100"
+      miningBaseReward: "100",
     }
   );
 
-  // Save to deployments.json
   console.log("Saving deployment to deployments.json...");
   trackDeployment(deploymentData);
 
-  // Also log the deployment info
-  console.log("");
+  Logger.blank();
   console.log("Deployment JSON for frontend config:");
   console.log(JSON.stringify(deploymentData, null, 2));
-  console.log("");
-  console.log("=".repeat(60));
-  console.log("Deployment completed successfully!");
-  console.log("=".repeat(60));
+  Logger.blank();
 
   return deploymentData;
 }
 
+// =============================================================================
+// Main Function
+// =============================================================================
+
+async function main(): Promise<Deployment> {
+  // Setup
+  const [deployer] = await ethers.getSigners();
+  const balance = await ethers.provider.getBalance(deployer.address);
+  const config = loadConfig(deployer.address);
+
+  logDeployerInfo(deployer, balance);
+
+  // Deploy all contracts
+  const token = await deployToken(config);
+  const mining = await deployMining(token.address);
+  const faucet = await deployFaucet(token.address);
+  const multiSig = await deployMultiSig(config);
+
+  const contracts: DeployedContracts = { token, mining, faucet, multiSig };
+
+  // Initialize contracts
+  await grantMinerRole(token, mining.address);
+  await fundFaucet(token, faucet, config.faucetFunding);
+
+  // Summary and save
+  logDeploymentSummary(contracts);
+
+  const network = await getNetworkInfo();
+  const deploymentData = saveDeployment(deployer.address, network, contracts);
+
+  Logger.separator();
+  console.log("Deployment completed successfully!");
+  Logger.separator();
+
+  return deploymentData;
+}
+
+// =============================================================================
+// Entry Point
+// =============================================================================
+
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error);
+    console.error("Deployment failed:", error);
     process.exit(1);
   });
