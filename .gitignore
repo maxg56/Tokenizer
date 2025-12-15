@@ -1,46 +1,151 @@
-node_modules
+# =============================================================================
+# TOKENIZER42 - Git Ignore Configuration
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# SECURITY - CRITICAL: Never commit these files
+# -----------------------------------------------------------------------------
+
+# Environment files with secrets
 .env
-.env.local
-coverage
+.env.*
+!.env.example
+*.env
+.envrc
+
+# Private keys and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+secrets/
+credentials/
+private/
+*.secret
+*.secrets
+
+# Wallet files
+*.keystore
+*.json.enc
+wallet*.json
+keystore/
+
+# AWS credentials
+.aws/
+aws-credentials
+
+# SSH keys
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.ppk
+
+# -----------------------------------------------------------------------------
+# Dependencies
+# -----------------------------------------------------------------------------
+node_modules/
+.pnpm-store/
+
+# -----------------------------------------------------------------------------
+# Hardhat / Solidity
+# -----------------------------------------------------------------------------
+cache/
+artifacts/
+typechain/
+typechain-types/
+coverage/
 coverage.json
-typechain
-typechain-types
 
-# Hardhat files
-cache
-artifacts
+# Hardhat deployment artifacts (may contain sensitive addresses)
+# Keep deployments.json but review before sharing
+# deployments.json
 
-# IDEs
-.vscode
-.idea
+# -----------------------------------------------------------------------------
+# Build artifacts
+# -----------------------------------------------------------------------------
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# -----------------------------------------------------------------------------
+# Next.js / Frontend
+# -----------------------------------------------------------------------------
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+.next/
+.vercel/
+
+# -----------------------------------------------------------------------------
+# IDE & Editor
+# -----------------------------------------------------------------------------
+.vscode/
+.idea/
 *.swp
 *.swo
+*.sublime-*
+.project
+.classpath
+.settings/
 
-# OS
+# -----------------------------------------------------------------------------
+# Operating System
+# -----------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
+Desktop.ini
+*.lnk
 
-# Logs
+# -----------------------------------------------------------------------------
+# Logs & Debug
+# -----------------------------------------------------------------------------
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
+debug/
 
-# Build artifacts
-dist/
-build/
-out/
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+.nyc_output/
+coverage/
+*.lcov
 
-# Next.js
-frontend/.next
-frontend/out
-frontend/node_modules
-
-# pnpm
-.pnpm-store
-
+# -----------------------------------------------------------------------------
 # Docker
+# -----------------------------------------------------------------------------
 *.pid
 *.seed
 *.pid.lock
+docker-compose.override.yml
+
+# -----------------------------------------------------------------------------
+# Temporary files
+# -----------------------------------------------------------------------------
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# -----------------------------------------------------------------------------
+# Security scanning results (may contain sensitive findings)
+# -----------------------------------------------------------------------------
+slither-results/
+mythril-results/
+.slither/
+security-scan-results/
+
+# -----------------------------------------------------------------------------
+# CI/CD artifacts
+# -----------------------------------------------------------------------------
+.github/secrets/
+.gitlab/secrets/
