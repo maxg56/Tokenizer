@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import { trackDeployment, createDeploymentInfo } from "./utils/deploymentTracker";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -104,41 +105,57 @@ async function main() {
   console.log(`  Daily Limit:       1000 claims`);
   console.log("");
 
-  // Save deployment info to JSON
-  const deploymentInfo = {
-    network: (await ethers.provider.getNetwork()).name,
-    chainId: Number((await ethers.provider.getNetwork()).chainId),
-    deployer: deployer.address,
-    timestamp: new Date().toISOString(),
-    contracts: {
+  // Get network info
+  const network = await ethers.provider.getNetwork();
+  const chainId = Number(network.chainId);
+  const networkName = network.name;
+
+  // Create deployment info for tracking
+  const deploymentData = createDeploymentInfo(
+    deployer.address,
+    chainId,
+    networkName,
+    {
       token: {
-        address: tokenAddress,
         name: "MaxToken42Mining",
+        address: tokenAddress,
         symbol: "MTK42"
       },
       mining: {
-        address: miningAddress,
-        name: "MiningContract"
+        name: "MiningContract",
+        address: miningAddress
       },
       faucet: {
-        address: faucetAddress,
-        name: "Faucet"
+        name: "Faucet",
+        address: faucetAddress
       },
       multiSig: {
-        address: multiSigAddress,
-        name: "MultiSigWallet"
+        name: "MultiSigWallet",
+        address: multiSigAddress
       }
+    },
+    {
+      initialSupply: "1000000",
+      maxSupply: "10000000",
+      faucetFunding: "100000",
+      miningBaseReward: "100"
     }
-  };
+  );
 
+  // Save to deployments.json
+  console.log("Saving deployment to deployments.json...");
+  trackDeployment(deploymentData);
+
+  // Also log the deployment info
+  console.log("");
   console.log("Deployment JSON for frontend config:");
-  console.log(JSON.stringify(deploymentInfo, null, 2));
+  console.log(JSON.stringify(deploymentData, null, 2));
   console.log("");
   console.log("=".repeat(60));
   console.log("Deployment completed successfully!");
   console.log("=".repeat(60));
 
-  return deploymentInfo;
+  return deploymentData;
 }
 
 main()

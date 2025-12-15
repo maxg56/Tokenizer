@@ -1,0 +1,118 @@
+# =============================================================================
+# Tokenizer42 - Docker Compose
+# =============================================================================
+# Configuration pour l'environnement de développement complet
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # Noeud Hardhat local
+  # ===========================================================================
+  hardhat-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: tokenizer42-hardhat
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./code/contracts:/app/code/contracts:ro
+      - ./code/scripts:/app/code/scripts:ro
+      - ./code/test:/app/code/test:ro
+      - ./deployments.json:/app/deployments.json
+    environment:
+      - NODE_ENV=development
+    networks:
+      - tokenizer42-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Service de test
+  # ===========================================================================
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    container_name: tokenizer42-test
+    volumes:
+      - ./code/contracts:/app/code/contracts:ro
+      - ./code/test:/app/code/test:ro
+    environment:
+      - NODE_ENV=test
+      - REPORT_GAS=true
+    networks:
+      - tokenizer42-network
+    profiles:
+      - test
+
+  # ===========================================================================
+  # Service de déploiement
+  # ===========================================================================
+  deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: tokenizer42-deploy
+    volumes:
+      - ./code/.env:/app/code/.env:ro
+      - ./deployments.json:/app/deployments.json
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      hardhat-node:
+        condition: service_healthy
+    networks:
+      - tokenizer42-network
+    profiles:
+      - deploy
+    command: ["pnpm", "run", "deploy:local"]
+
+  # ===========================================================================
+  # Frontend (Next.js)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tokenizer42-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+      - ./deployments.json:/app/public/deployments.json:ro
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_CHAIN_ID=1337
+      - NEXT_PUBLIC_RPC_URL=http://hardhat-node:8545
+    depends_on:
+      - hardhat-node
+    networks:
+      - tokenizer42-network
+    profiles:
+      - frontend
+    command: ["pnpm", "dev"]
+
+# =============================================================================
+# Réseaux
+# =============================================================================
+networks:
+  tokenizer42-network:
+    driver: bridge
+    name: tokenizer42-network
+
+# =============================================================================
+# Volumes persistants
+# =============================================================================
+volumes:
+  hardhat-data:
+    name: tokenizer42-hardhat-data

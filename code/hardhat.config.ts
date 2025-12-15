@@ -2,6 +2,10 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "dotenv/config";
 
+// RPC URLs avec fallback vers les valeurs par défaut
+const BSC_TESTNET_RPC = process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/";
+const BSC_MAINNET_RPC = process.env.BSC_MAINNET_RPC_URL || "https://bsc-dataseed1.binance.org/";
+
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.20",
@@ -21,12 +25,12 @@ const config: HardhatUserConfig = {
       chainId: 1337,
     },
     bsctest: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      url: BSC_TESTNET_RPC,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 97,
     },
     bsc: {
-      url: "https://bsc-dataseed1.binance.org/",
+      url: BSC_MAINNET_RPC,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 56,
     },
