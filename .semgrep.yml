@@ -1,0 +1,60 @@
+# =============================================================================
+# Semgrep Configuration - Tokenizer42
+# =============================================================================
+# Custom rules and configuration for security scanning
+# See: https://semgrep.dev/docs/writing-rules/overview
+# =============================================================================
+
+rules:
+  # ---------------------------------------------------------------------------
+  # Custom Rule: Suppress false positives for OpenZeppelin error names
+  # ---------------------------------------------------------------------------
+  - id: ignore-openzeppelin-error-names
+    pattern-either:
+      - pattern: revertedWithCustomError($CONTRACT, "ERC20InsufficientBalance")
+      - pattern: revertedWithCustomError($CONTRACT, "ERC20InsufficientAllowance")
+      - pattern: revertedWithCustomError($CONTRACT, "ERC20InvalidReceiver")
+      - pattern: revertedWithCustomError($CONTRACT, "ERC20InvalidSender")
+      - pattern: revertedWithCustomError($CONTRACT, "ERC20InvalidApprover")
+      - pattern: revertedWithCustomError($CONTRACT, "ERC20InvalidSpender")
+    message: |
+      This is a Hardhat/Chai test assertion checking for OpenZeppelin custom errors.
+      These are standardized error names (EIP-6093), not cryptographic operations.
+      FALSE POSITIVE - No security issue.
+    severity: INFO
+    languages:
+      - typescript
+      - javascript
+    metadata:
+      category: false-positive
+      technology:
+        - hardhat
+        - openzeppelin
+      references:
+        - https://eips.ethereum.org/EIPS/eip-6093
+        - https://docs.openzeppelin.com/contracts/5.x/
+
+  # ---------------------------------------------------------------------------
+  # Detect actual hardcoded private keys (security rule)
+  # ---------------------------------------------------------------------------
+  - id: hardcoded-private-key
+    patterns:
+      - pattern-regex: '(0x)?[a-fA-F0-9]{64}'
+      - pattern-not-regex: '0x0{64}'  # Exclude zero values
+    paths:
+      exclude:
+        - "**/test/**"
+        - "**/*.test.ts"
+        - "**/node_modules/**"
+    message: |
+      Potential hardcoded private key detected.
+      Never commit private keys to source control.
+    severity: ERROR
+    languages:
+      - typescript
+      - javascript
+      - solidity
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A3:2017 Sensitive Data Exposure"

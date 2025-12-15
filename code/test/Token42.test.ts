@@ -64,7 +64,8 @@ describe("Token42", function () {
       const transferAmount = initialOwnerBalance + 1n;
 
       // Essayer de transférer plus que le solde disponible (addr1 n'a pas de tokens)
-      // OpenZeppelin v5 utilise des custom errors
+      // OpenZeppelin v5 utilise des custom errors (EIP-6093)
+      // security:ignore - false positive: ERC20InsufficientBalance is an error NAME, not a crypto algorithm
       await expect(
         token.connect(addr1).transfer(owner.address, transferAmount)
       ).to.be.revertedWithCustomError(token, "ERC20InsufficientBalance");
@@ -125,7 +126,8 @@ describe("Token42", function () {
       await token.approve(addr1.address, approveAmount);
 
       // Essayer de transférer 100 tokens (plus que l'allowance)
-      // OpenZeppelin v5 utilise des custom errors
+      // OpenZeppelin v5 utilise des custom errors (EIP-6093)
+      // security:ignore - false positive: ERC20InsufficientAllowance is an error NAME, not a crypto algorithm
       await expect(
         token.connect(addr1).transferFrom(
           owner.address,
@@ -148,7 +150,8 @@ describe("Token42", function () {
     it("Should not allow transfer to zero address", async function () {
       const transferAmount = ethers.parseUnits("50", DECIMALS);
 
-      // OpenZeppelin v5 utilise des custom errors
+      // OpenZeppelin v5 utilise des custom errors (EIP-6093)
+      // security:ignore - false positive: ERC20InvalidReceiver is an error NAME, not a crypto algorithm
       await expect(
         token.transfer(ethers.ZeroAddress, transferAmount)
       ).to.be.revertedWithCustomError(token, "ERC20InvalidReceiver");

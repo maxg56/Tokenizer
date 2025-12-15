@@ -61,6 +61,13 @@ regexes = [
   '''0x[0]{40}''',                    # Zero address
   '''PRIVATE_KEY=$''',                # Empty env var
   '''BSCSCAN_API_KEY=$''',            # Empty env var
+  # OpenZeppelin EIP-6093 custom error names (NOT crypto algorithms)
+  '''ERC20InsufficientBalance''',
+  '''ERC20InsufficientAllowance''',
+  '''ERC20InvalidReceiver''',
+  '''ERC20InvalidSender''',
+  '''ERC20InvalidApprover''',
+  '''ERC20InvalidSpender''',
 ]
 
 # Allow specific paths that shouldn't contain secrets
@@ -69,6 +76,8 @@ paths = [
   '''.*test.*''',
   '''.*\.md$''',
   '''.*\.txt$''',
+  '''.*\.test\.ts$''',
+  '''.*\.spec\.ts$''',
 ]
 
 # =============================================================================
