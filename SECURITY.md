@@ -366,9 +366,9 @@ If you discover a security vulnerability:
 
 ## Security Contacts
 
-- **Project Lead**: [contact@tokenizer42.com]
-- **Security Team**: [security@tokenizer42.com]
-- **Emergency**: [emergency@tokenizer42.com]
+- **Project Lead**: [alice.smith@tokenizer42.com]
+- **Security Team**: [security-team@tokenizer42.com]
+- **Emergency**: [incident-response@tokenizer42.com]
 
 ---
 
