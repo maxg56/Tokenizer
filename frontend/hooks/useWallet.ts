@@ -57,8 +57,40 @@ export function useWallet() {
   }, []);
 
   // Handle chain changes
-  const handleChainChanged = useCallback(() => {
-    window.location.reload();
+  const handleChainChanged = useCallback(async () => {
+    if (window.ethereum) {
+      try {
+        const provider = new BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const network = await provider.getNetwork();
+        // Try to get the current account
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
+        setState({
+          account: accounts && accounts.length > 0 ? accounts[0] : null,
+          chainId: Number(network.chainId),
+          isConnected: accounts && accounts.length > 0,
+          provider,
+          signer,
+        });
+      } catch (error) {
+        // If something goes wrong, reset state
+        setState({
+          account: null,
+          chainId: null,
+          isConnected: false,
+          provider: null,
+          signer: null,
+        });
+      }
+    } else {
+      setState({
+        account: null,
+        chainId: null,
+        isConnected: false,
+        provider: null,
+        signer: null,
+      });
+    }
   }, []);
 
   // Connect wallet
