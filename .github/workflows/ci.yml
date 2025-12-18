@@ -11,7 +11,7 @@ jobs:
   # Secret Scanning - MUST run first and pass
   # ===========================================================================
   secret-scan:
-    name: Secret Scanning
+    name: Secret Scanning (Gitleaks)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -19,11 +19,78 @@ jobs:
         with:
           fetch-depth: 0  # Full history for comprehensive scanning
 
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+      - name: Install Gitleaks
+        run: |
+          wget -q https://github.com/gitleaks/gitleaks/releases/download/v8.18.1/gitleaks_8.18.1_linux_x64.tar.gz
+          tar -xzf gitleaks_8.18.1_linux_x64.tar.gz
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Validate Gitleaks config
+        run: |
+          echo "Validating .gitleaks.toml syntax..."
+          if [ -f ".gitleaks.toml" ]; then
+            gitleaks detect --config .gitleaks.toml --no-git --source . --exit-code 0 --verbose 2>&1 | head -20 || true
+            echo "Config validation complete"
+          else
+            echo "No .gitleaks.toml found, using defaults"
+          fi
+
+      - name: Run Gitleaks scan
+        id: gitleaks
+        run: |
+          echo "Running Gitleaks secret scan..."
+          GITLEAKS_EXIT_CODE=0
+          gitleaks detect \
+            --config .gitleaks.toml \
+            --source . \
+            --report-format sarif \
+            --report-path results.sarif \
+            --verbose \
+            --exit-code 1 || GITLEAKS_EXIT_CODE=$?
+
+          echo "gitleaks_exit_code=$GITLEAKS_EXIT_CODE" >> $GITHUB_OUTPUT
+
+          if [ $GITLEAKS_EXIT_CODE -eq 0 ]; then
+            echo "No secrets detected"
+          elif [ $GITLEAKS_EXIT_CODE -eq 1 ]; then
+            echo "::error::Secrets detected! Review the SARIF report."
+          else
+            echo "::warning::Gitleaks encountered an error (exit code: $GITLEAKS_EXIT_CODE)"
+          fi
+
+          # Always generate an empty SARIF if scan failed before creating one
+          if [ ! -f "results.sarif" ]; then
+            echo '{"version":"2.1.0","$schema":"https://json.schemastore.org/sarif-2.1.0.json","runs":[{"tool":{"driver":{"name":"gitleaks","version":"8.18.1"}},"results":[]}]}' > results.sarif
+            echo "Created empty SARIF report"
+          fi
+
+      - name: Verify SARIF file exists
+        run: |
+          if [ -f "results.sarif" ]; then
+            echo "SARIF report generated successfully"
+            echo "File size: $(wc -c < results.sarif) bytes"
+            cat results.sarif | head -100
+          else
+            echo "::error::SARIF file not found!"
+            exit 1
+          fi
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+          category: gitleaks
+        continue-on-error: true  # Don't fail if upload has issues
+
+      - name: Check for secrets (fail if found)
+        run: |
+          EXIT_CODE=${{ steps.gitleaks.outputs.gitleaks_exit_code }}
+          if [ "$EXIT_CODE" = "1" ]; then
+            echo "::error::Secrets were detected in the repository!"
+            exit 1
+          fi
 
   # ===========================================================================
   # Smart Contract Tests

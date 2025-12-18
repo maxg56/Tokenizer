@@ -48,19 +48,19 @@ regex = '''[a-zA-Z0-9_-]{32}'''
 keywords = ["alchemy", "api_key", "apikey"]
 
 # =============================================================================
-# Allowed Patterns (False Positives)
+# Global Allowlist (False Positives)
 # =============================================================================
 
 [allowlist]
-description = "Global allowlist"
+description = "Global allowlist for false positives"
 
-# Allow example/placeholder values
+# Regex patterns to ignore
 regexes = [
   '''your_private_key_here''',
   '''your_bscscan_api_key_here''',
-  '''0x[0]{40}''',                    # Zero address
-  '''PRIVATE_KEY=$''',                # Empty env var
-  '''BSCSCAN_API_KEY=$''',            # Empty env var
+  '''0x[0]{40}''',
+  '''PRIVATE_KEY=$''',
+  '''BSCSCAN_API_KEY=$''',
   # OpenZeppelin EIP-6093 custom error names (NOT crypto algorithms)
   '''ERC20InsufficientBalance''',
   '''ERC20InsufficientAllowance''',
@@ -70,7 +70,7 @@ regexes = [
   '''ERC20InvalidSpender''',
 ]
 
-# Allow specific paths that shouldn't contain secrets
+# Path patterns to exclude from scanning
 paths = [
   '''\.env\.example$''',
   '''.*test.*''',
@@ -78,26 +78,13 @@ paths = [
   '''.*\.txt$''',
   '''.*\.test\.ts$''',
   '''.*\.spec\.ts$''',
-]
-
-# =============================================================================
-# Commits to Skip
-# =============================================================================
-
-[allowlist.commits]
-# Add commit hashes to skip if false positives were already committed
-# Example: commits = ["abc123", "def456"]
-
-# =============================================================================
-# Path Exclusions
-# =============================================================================
-
-[allowlist.paths]
-# Paths to completely exclude from scanning
-paths = [
   '''node_modules/''',
   '''\.git/''',
   '''artifacts/''',
   '''cache/''',
   '''coverage/''',
+  '''typechain-types/''',
 ]
+
+# Commits to skip (add commit hashes for known false positives)
+# commits = ["abc123def456"]
