@@ -19,9 +19,9 @@ useDefault = true
 [[rules]]
 id = "ethereum-private-key"
 description = "Detected a potential Ethereum private key"
-regex = '''(?i)(0x)?[a-fA-F0-9]{64}'''
-keywords = ["private_key", "privatekey", "secret_key", "secretkey"]
-entropy = 3.5
+regex = '''0x[a-fA-F0-9]{64}'''
+keywords = ["private_key", "privatekey", "secret_key", "secretkey", "eth_private_key", "wallet", "keystore", "ethereum", "account", "privkey", "key"]
+entropy = 4.2
 
 [[rules]]
 id = "mnemonic-phrase"
