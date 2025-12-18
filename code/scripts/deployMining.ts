@@ -55,8 +55,11 @@ const Logger = {
 
 function validateEnvironment(): void {
   // Validate that we're not accidentally exposing private keys
-  if (process.env.PRIVATE_KEY && process.env.PRIVATE_KEY.length < 64) {
-    throw new Error("Invalid PRIVATE_KEY format");
+  if (
+    process.env.PRIVATE_KEY &&
+    !/^[0-9a-fA-F]{64}$/.test(process.env.PRIVATE_KEY)
+  ) {
+    throw new Error("Invalid PRIVATE_KEY format: must be exactly 64 hexadecimal characters");
   }
 }
 
