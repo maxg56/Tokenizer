@@ -1,0 +1,90 @@
+# =============================================================================
+# Gitleaks Configuration - Tokenizer42
+# =============================================================================
+# This file configures secret detection for the project.
+# Install: https://github.com/gitleaks/gitleaks
+# Usage: gitleaks detect --config .gitleaks.toml
+# =============================================================================
+
+title = "Tokenizer42 Gitleaks Configuration"
+
+[extend]
+# Use the default gitleaks rules as a base
+useDefault = true
+
+# =============================================================================
+# Custom Rules for Blockchain Projects
+# =============================================================================
+
+[[rules]]
+id = "ethereum-private-key"
+description = "Detected a potential Ethereum private key"
+regex = '''0x[a-fA-F0-9]{64}'''
+keywords = ["private_key", "privatekey", "secret_key", "secretkey", "eth_private_key", "wallet", "keystore", "ethereum", "account", "privkey", "key"]
+entropy = 4.2
+
+[[rules]]
+id = "mnemonic-phrase"
+description = "Detected a potential mnemonic/seed phrase"
+regex = '''(?i)(abandon|ability|able|about|above|absent)(\s+\w+){11,23}'''
+keywords = ["mnemonic", "seed", "phrase", "recovery"]
+
+[[rules]]
+id = "bscscan-api-key"
+description = "Detected a potential BSCScan API key"
+regex = '''[A-Z0-9]{34}'''
+keywords = ["bscscan", "etherscan", "api_key", "apikey"]
+
+[[rules]]
+id = "infura-api-key"
+description = "Detected a potential Infura API key"
+regex = '''[a-f0-9]{32}'''
+keywords = ["infura", "project_id", "projectid"]
+
+[[rules]]
+id = "alchemy-api-key"
+description = "Detected a potential Alchemy API key"
+regex = '''[a-zA-Z0-9_-]{32}'''
+keywords = ["alchemy", "api_key", "apikey"]
+
+# =============================================================================
+# Global Allowlist (False Positives)
+# =============================================================================
+
+[allowlist]
+description = "Global allowlist for false positives"
+
+# Regex patterns to ignore
+regexes = [
+  '''your_private_key_here''',
+  '''your_bscscan_api_key_here''',
+  '''0x[0]{40}''',
+  '''PRIVATE_KEY=$''',
+  '''BSCSCAN_API_KEY=$''',
+  # OpenZeppelin EIP-6093 custom error names (NOT crypto algorithms)
+  '''ERC20InsufficientBalance''',
+  '''ERC20InsufficientAllowance''',
+  '''ERC20InvalidReceiver''',
+  '''ERC20InvalidSender''',
+  '''ERC20InvalidApprover''',
+  '''ERC20InvalidSpender''',
+]
+
+# Path patterns to exclude from scanning
+paths = [
+  '''\.env\.example$''',
+  '''.*test.*''',
+  '''.*\.md$''',
+  '''.*\.txt$''',
+  '''.*\.test\.ts$''',
+  '''.*\.spec\.ts$''',
+  '''node_modules/''',
+  '''\.git/''',
+  '''artifacts/''',
+  '''cache/''',
+  '''coverage/''',
+  '''typechain-types/''',
+]
+
+# Commits to skip (add commit hashes for known false positives)
+# commits = ["abc123def456"]

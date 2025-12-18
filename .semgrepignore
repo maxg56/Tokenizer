@@ -1,0 +1,55 @@
+# =============================================================================
+# Semgrep Ignore Configuration - Tokenizer42
+# =============================================================================
+# This file configures paths and patterns to exclude from Semgrep scans.
+# See: https://semgrep.dev/docs/ignoring-files-folders-code
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Test Files - Exclude from security/crypto analysis
+# Test files contain mock data, test assertions, and helper utilities
+# that should not be analyzed as production security code.
+# -----------------------------------------------------------------------------
+**/test/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+**/tests/
+**/__tests__/
+**/fixtures/
+
+# -----------------------------------------------------------------------------
+# Build Artifacts and Dependencies
+# Generated code should not be scanned
+# -----------------------------------------------------------------------------
+node_modules/
+dist/
+build/
+out/
+artifacts/
+cache/
+typechain/
+typechain-types/
+coverage/
+
+# -----------------------------------------------------------------------------
+# Configuration Files
+# These may contain example values that trigger false positives
+# -----------------------------------------------------------------------------
+*.example
+.env.example
+
+# -----------------------------------------------------------------------------
+# Documentation
+# Markdown files may contain code examples that aren't real
+# -----------------------------------------------------------------------------
+*.md
+docs/
+
+# -----------------------------------------------------------------------------
+# IDE and OS Files
+# -----------------------------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
