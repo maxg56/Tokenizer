@@ -1,0 +1,53 @@
+{
+  "description": "Adresses des contrats déployés sur les différents réseaux",
+  "version": "1.0.0",
+  "networks": {
+    "bscTestnet": {
+      "chainId": 97,
+      "name": "BSC Testnet",
+      "rpcUrl": "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      "explorer": "https://testnet.bscscan.com",
+      "contracts": {
+        "MaxToken42Mining": {
+          "address": "",
+          "deploymentTx": "",
+          "deployedAt": "",
+          "verifiedAt": "",
+          "note": "Token ERC20 minable avec supply max 10M MTK42"
+        },
+        "MiningContract": {
+          "address": "",
+          "deploymentTx": "",
+          "deployedAt": "",
+          "verifiedAt": "",
+          "note": "Contrat de minage proof-of-work avec rewards"
+        },
+        "Faucet": {
+          "address": "",
+          "deploymentTx": "",
+          "deployedAt": "",
+          "verifiedAt": "",
+          "note": "Distribution de 100 MTK42 toutes les 24h"
+        },
+        "MultiSigWallet": {
+          "address": "",
+          "deploymentTx": "",
+          "deployedAt": "",
+          "verifiedAt": "",
+          "owners": [],
+          "requiredSignatures": 2,
+          "note": "Portefeuille multi-signatures 2-sur-3"
+        }
+      }
+    },
+    "bscMainnet": {
+      "chainId": 56,
+      "name": "BSC Mainnet",
+      "rpcUrl": "https://bsc-dataseed1.binance.org/",
+      "explorer": "https://bscscan.com",
+      "contracts": {
+        "note": "⚠️ NE PAS DÉPLOYER SUR MAINNET SANS AUDIT COMPLET"
+      }
+    }
+  }
+}
