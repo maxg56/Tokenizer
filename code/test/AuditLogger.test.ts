@@ -136,9 +136,17 @@ describe("AuditLogger", function () {
         data
       );
 
+      // Wait for the transaction to confirm
       const receipt = await tx.wait();
       const block = await ethers.provider.getBlock(receipt!.blockNumber);
 
+      // Compute the expected data hash using the same logic as the smart contract
+      const expectedDataHash = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(
+        ["uint256", "uint8", "address", "address", "uint256", "bytes"],
+        [0, AuditEventType.TOKEN_MINTED, actor1.address, contract1.address, block!.timestamp, data]
+      ));
+
+      // Ensure the emitted event matches the expected data
       await expect(tx)
         .to.emit(auditLogger, "AuditLog")
         .withArgs(
@@ -147,7 +155,7 @@ describe("AuditLogger", function () {
           actor1.address,
           contract1.address,
           block!.timestamp,
-          ethers.AnyValue // dataHash
+          expectedDataHash
         );
     });
 

@@ -70,7 +70,7 @@ contract AuditLogger is IAuditLogger, AccessControl, ReentrancyGuard, Pausable {
         require(targetContract != address(0), "Invalid target contract");
 
         uint256 logId = logCounter++;
-        bytes32 dataHash = keccak256(abi.encodePacked(
+        bytes32 dataHash = keccak256(abi.encode(
             logId,
             eventType,
             actor,
@@ -216,7 +216,7 @@ contract AuditLogger is IAuditLogger, AccessControl, ReentrancyGuard, Pausable {
         require(logId < logCounter, "Log ID does not exist");
 
         AuditLogEntry memory entry = logs[logId];
-        bytes32 computedHash = keccak256(abi.encodePacked(
+        bytes32 computedHash = keccak256(abi.encode(
             logId,
             entry.eventType,
             entry.actor,
