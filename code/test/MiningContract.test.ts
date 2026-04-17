@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { MaxToken42Mining, MiningContractV2 } from "../typechain-types";
+import { MaxToken42Mining, MiningContract } from "../typechain-types";
 
 describe("Mining System", function () {
   async function deployMiningSystemFixture() {
