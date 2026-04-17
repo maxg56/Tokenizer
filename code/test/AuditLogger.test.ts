@@ -3,7 +3,6 @@ import { ethers } from "hardhat";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { AuditLogger } from "../typechain-types";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers";
 
 describe("AuditLogger", function () {
   let auditLogger: AuditLogger;
