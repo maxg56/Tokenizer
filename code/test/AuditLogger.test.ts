@@ -140,15 +140,20 @@ describe("AuditLogger", function () {
       const receipt = await tx.wait();
       const block = await ethers.provider.getBlock(receipt!.blockNumber);
 
+      const expectedHash = ethers.keccak256(ethers.solidityPacked(
+        ['uint256', 'uint8', 'address', 'address', 'uint256', 'bytes'],
+        [0, AuditEventType.TOKEN_MINTED, actor1.address, contract1.address, block!.timestamp, data]
+      ));
+
       await expect(tx)
         .to.emit(auditLogger, "AuditLog")
         .withArgs(
-          0, // logId
+          0,
           AuditEventType.TOKEN_MINTED,
           actor1.address,
           contract1.address,
           block!.timestamp,
-          anyValue // dataHash
+          expectedHash
         );
     });
 
