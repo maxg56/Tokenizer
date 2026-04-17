@@ -66,8 +66,9 @@ describe("AuditLogger", function () {
 
     it("Should emit AuditSystemDeployed event", async function () {
       const AuditLoggerFactory = await ethers.getContractFactory("AuditLogger");
-      await expect(AuditLoggerFactory.deploy())
-        .to.emit(AuditLoggerFactory, "AuditSystemDeployed");
+      const contract = await AuditLoggerFactory.deploy();
+      await expect(contract.deploymentTransaction())
+        .to.emit(contract, "AuditSystemDeployed");
     });
   });
 
@@ -136,26 +137,23 @@ describe("AuditLogger", function () {
         data
       );
 
-      // Wait for the transaction to confirm
       const receipt = await tx.wait();
       const block = await ethers.provider.getBlock(receipt!.blockNumber);
 
-      // Compute the expected data hash using the same logic as the smart contract
-      const expectedDataHash = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(
-        ["uint256", "uint8", "address", "address", "uint256", "bytes"],
+      const expectedHash = ethers.keccak256(ethers.solidityPacked(
+        ['uint256', 'uint8', 'address', 'address', 'uint256', 'bytes'],
         [0, AuditEventType.TOKEN_MINTED, actor1.address, contract1.address, block!.timestamp, data]
       ));
 
-      // Ensure the emitted event matches the expected data
       await expect(tx)
         .to.emit(auditLogger, "AuditLog")
         .withArgs(
-          0, // logId
+          0,
           AuditEventType.TOKEN_MINTED,
           actor1.address,
           contract1.address,
           block!.timestamp,
-          expectedDataHash
+          expectedHash
         );
     });
 
@@ -345,23 +343,23 @@ describe("AuditLogger", function () {
 
       // Advance time and log again
       await time.increase(3600); // 1 hour
-      midTime = await time.latest();
       await auditLogger.connect(logger1).logEvent(
         AuditEventType.TOKEN_BURNED,
         actor2.address,
         contract1.address,
         data
       );
+      midTime = await time.latest();
 
       // Advance time and log again
       await time.increase(3600); // 1 hour
-      endTime = await time.latest();
       await auditLogger.connect(logger1).logEvent(
         AuditEventType.TOKEN_TRANSFERRED,
         actor1.address,
         contract1.address,
         data
       );
+      endTime = await time.latest();
     });
 
     it("Should retrieve logs in time range", async function () {
