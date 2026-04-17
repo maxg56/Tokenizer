@@ -3,6 +3,7 @@ import { ethers } from "hardhat";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { AuditLogger } from "../typechain-types";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers";
 
 describe("AuditLogger", function () {
   let auditLogger: AuditLogger;
@@ -66,8 +67,9 @@ describe("AuditLogger", function () {
 
     it("Should emit AuditSystemDeployed event", async function () {
       const AuditLoggerFactory = await ethers.getContractFactory("AuditLogger");
-      await expect(AuditLoggerFactory.deploy())
-        .to.emit(AuditLoggerFactory, "AuditSystemDeployed");
+      const contract = await AuditLoggerFactory.deploy();
+      await expect(contract.deploymentTransaction())
+        .to.emit(contract, "AuditSystemDeployed");
     });
   });
 
@@ -147,7 +149,7 @@ describe("AuditLogger", function () {
           actor1.address,
           contract1.address,
           block!.timestamp,
-          ethers.AnyValue // dataHash
+          anyValue // dataHash
         );
     });
 
@@ -337,23 +339,23 @@ describe("AuditLogger", function () {
 
       // Advance time and log again
       await time.increase(3600); // 1 hour
-      midTime = await time.latest();
       await auditLogger.connect(logger1).logEvent(
         AuditEventType.TOKEN_BURNED,
         actor2.address,
         contract1.address,
         data
       );
+      midTime = await time.latest();
 
       // Advance time and log again
       await time.increase(3600); // 1 hour
-      endTime = await time.latest();
       await auditLogger.connect(logger1).logEvent(
         AuditEventType.TOKEN_TRANSFERRED,
         actor1.address,
         contract1.address,
         data
       );
+      endTime = await time.latest();
     });
 
     it("Should retrieve logs in time range", async function () {
