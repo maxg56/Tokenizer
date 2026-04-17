@@ -22,6 +22,10 @@ interface WalletState {
   signer: JsonRpcSigner | null;
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
 export function useWallet() {
   const [state, setState] = useState<WalletState>({
     account: null,
@@ -33,7 +37,7 @@ export function useWallet() {
 
   // Handle account changes
   const handleAccountsChanged = useCallback(async (accounts: unknown) => {
-    const accountList = accounts as string[];
+    const accountList = isStringArray(accounts) ? accounts : [];
     if (accountList.length === 0) {
       setState({
         account: null,
@@ -64,11 +68,12 @@ export function useWallet() {
         const signer = await provider.getSigner();
         const network = await provider.getNetwork();
         // Try to get the current account
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
+        const rawAccounts = await window.ethereum.request({ method: 'eth_accounts' });
+        const accounts = isStringArray(rawAccounts) ? rawAccounts : [];
         setState({
-          account: accounts && accounts.length > 0 ? accounts[0] : null,
+          account: accounts.length > 0 ? accounts[0] : null,
           chainId: Number(network.chainId),
-          isConnected: accounts && accounts.length > 0,
+          isConnected: accounts.length > 0,
           provider,
           signer,
         });
@@ -101,9 +106,10 @@ export function useWallet() {
     }
 
     try {
-      const accounts = await window.ethereum.request({
+      const rawAccounts = await window.ethereum.request({
         method: 'eth_requestAccounts',
-      }) as string[];
+      });
+      const accounts = isStringArray(rawAccounts) ? rawAccounts : [];
 
       if (accounts.length > 0) {
         const provider = new BrowserProvider(window.ethereum);
@@ -139,9 +145,10 @@ export function useWallet() {
     const checkConnection = async () => {
       if (window.ethereum) {
         try {
-          const accounts = await window.ethereum.request({
+          const rawAccounts = await window.ethereum.request({
             method: 'eth_accounts',
-          }) as string[];
+          });
+          const accounts = isStringArray(rawAccounts) ? rawAccounts : [];
 
           if (accounts.length > 0) {
             const provider = new BrowserProvider(window.ethereum);

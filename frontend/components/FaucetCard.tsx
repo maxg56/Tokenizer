@@ -14,6 +14,7 @@ export function FaucetCard({ account, chainId }: FaucetCardProps) {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [dripAmount, setDripAmount] = useState<string>('0');
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -30,6 +31,7 @@ export function FaucetCard({ account, chainId }: FaucetCardProps) {
     }
 
     try {
+      setFetchError(null);
       const provider = new BrowserProvider(window.ethereum);
       const faucet = new Contract(addresses.faucet, ABIS.faucet, provider);
 
@@ -43,6 +45,10 @@ export function FaucetCard({ account, chainId }: FaucetCardProps) {
       setDripAmount(formatEther(amount));
     } catch (error) {
       console.error('Error fetching faucet info:', error);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      setFetchError(msg.includes('network') || msg.includes('fetch')
+        ? 'Unable to reach the network. Check your connection.'
+        : 'Failed to load faucet data. The contract may not be deployed on this network.');
     } finally {
       setLoading(false);
     }
@@ -120,6 +126,10 @@ export function FaucetCard({ account, chainId }: FaucetCardProps) {
         </div>
       ) : loading ? (
         <div className="text-center py-4 text-gray-400">Loading...</div>
+      ) : fetchError ? (
+        <div className="p-3 rounded-lg bg-red-900/50 text-red-400 text-sm">
+          {fetchError}
+        </div>
       ) : (
         <>
           <div className="bg-dark rounded-lg p-4 mb-4">
