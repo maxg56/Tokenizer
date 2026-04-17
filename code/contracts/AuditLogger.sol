@@ -37,6 +37,10 @@ contract AuditLogger is IAuditLogger, AccessControl, ReentrancyGuard, Pausable {
     // Statistiques
     mapping(AuditEventType => uint256) public eventTypeCount;
     mapping(address => uint256) public actorActivityCount;
+    uint256 private uniqueActorsCount;
+    uint256 private uniqueContractsCount;
+    mapping(address => bool) private knownActors;
+    mapping(address => bool) private knownContracts;
 
     // Événements supplémentaires
     event AuditSystemDeployed(address indexed deployer, uint256 timestamp);
@@ -97,6 +101,14 @@ contract AuditLogger is IAuditLogger, AccessControl, ReentrancyGuard, Pausable {
         // Mettre à jour les statistiques
         eventTypeCount[eventType]++;
         actorActivityCount[actor]++;
+        if (!knownActors[actor]) {
+            knownActors[actor] = true;
+            uniqueActorsCount++;
+        }
+        if (!knownContracts[targetContract]) {
+            knownContracts[targetContract] = true;
+            uniqueContractsCount++;
+        }
 
         emit AuditLog(logId, eventType, actor, targetContract, block.timestamp, dataHash);
     }
@@ -189,23 +201,37 @@ contract AuditLogger is IAuditLogger, AccessControl, ReentrancyGuard, Pausable {
         require(startTime <= endTime, "Invalid time range");
         require(endTime <= block.timestamp, "End time cannot be in the future");
 
-        // Collecter tous les logs dans la plage de temps
-        uint256[] memory matchingLogs = new uint256[](logCounter);
+        // Première passe : compter les correspondances
         uint256 matchCount = 0;
-
         for (uint256 i = 0; i < logCounter; i++) {
             if (logs[i].timestamp >= startTime && logs[i].timestamp <= endTime) {
-                matchingLogs[matchCount++] = i;
+                matchCount++;
             }
         }
 
-        // Créer un tableau de la taille exacte
-        uint256[] memory result = new uint256[](matchCount);
-        for (uint256 i = 0; i < matchCount; i++) {
-            result[i] = matchingLogs[i];
+        if (offset >= matchCount) {
+            return new uint256[](0);
         }
 
-        return _paginateResults(result, offset, limit);
+        uint256 end = offset + limit;
+        if (end > matchCount) end = matchCount;
+        uint256 resultLength = end - offset;
+
+        // Deuxième passe : remplir le résultat paginé directement
+        uint256[] memory result = new uint256[](resultLength);
+        uint256 currentIndex = 0;
+        uint256 resultIndex = 0;
+
+        for (uint256 i = 0; i < logCounter && resultIndex < resultLength; i++) {
+            if (logs[i].timestamp >= startTime && logs[i].timestamp <= endTime) {
+                if (currentIndex >= offset) {
+                    result[resultIndex++] = i;
+                }
+                currentIndex++;
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -239,14 +265,10 @@ contract AuditLogger is IAuditLogger, AccessControl, ReentrancyGuard, Pausable {
         uint256 burnEvents,
         uint256 miningEvents
     ) {
-        // Compter les acteurs uniques (approximation)
-        uint256 actorCount = 0;
-        // Note: Dans une implémentation réelle, vous voudriez suivre cela plus efficacement
-
         return (
             logCounter,
-            actorCount,
-            0, // Implémentation simplifiée
+            uniqueActorsCount,
+            uniqueContractsCount,
             eventTypeCount[AuditEventType.TOKEN_MINTED],
             eventTypeCount[AuditEventType.TOKEN_BURNED],
             eventTypeCount[AuditEventType.BLOCK_MINED]

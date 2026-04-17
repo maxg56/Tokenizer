@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.20;
 
 import "./MaxToken42Mining.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -29,6 +29,7 @@ contract MiningContract is Ownable, ReentrancyGuard, Pausable {
     mapping(address => MinerData) public miners;
     mapping(uint256 => BlockData) public blocks;
     address[] public activeMinersList;
+    uint256 public activeMinersCount;
 
     struct MinerData {
         uint256 power; // Puissance de minage (1-100)
@@ -93,6 +94,9 @@ contract MiningContract is Ownable, ReentrancyGuard, Pausable {
             activeMinersList.push(msg.sender);
         }
 
+        if (!miner.isActive) {
+            activeMinersCount++;
+        }
         miner.isActive = true;
 
         emit MiningStarted(msg.sender, power);
@@ -106,6 +110,7 @@ contract MiningContract is Ownable, ReentrancyGuard, Pausable {
 
         miners[msg.sender].isActive = false;
         miners[msg.sender].power = 0;
+        activeMinersCount--;
 
         emit MiningStopped(msg.sender);
     }
@@ -261,7 +266,7 @@ contract MiningContract is Ownable, ReentrancyGuard, Pausable {
     /**
      * @dev Réclamer le bonus quotidien
      */
-    function claimDailyBonus() external whenNotPaused {
+    function claimDailyBonus() external whenNotPaused nonReentrant {
         MinerData storage miner = miners[msg.sender];
         require(miner.isActive, "Must be an active miner");
         require(
@@ -314,20 +319,13 @@ contract MiningContract is Ownable, ReentrancyGuard, Pausable {
         uint256 _currentReward,
         uint256 _nextDifficultyAdjustment
     ) {
-        uint256 activeCount = 0;
-        for (uint i = 0; i < activeMinersList.length; i++) {
-            if (miners[activeMinersList[i]].isActive) {
-                activeCount++;
-            }
-        }
-
         uint256 blocksUntilAdjustment = 144 - (currentBlock % 144);
 
         return (
             currentBlock,
             totalMined,
             difficulty,
-            activeCount,
+            activeMinersCount,
             getCurrentBlockReward(),
             blocksUntilAdjustment
         );

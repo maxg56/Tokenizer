@@ -109,6 +109,7 @@ contract MultiSigWallet is ReentrancyGuard {
         uint256 _value,
         bytes memory _data
     ) public onlyOwner returns (uint256) {
+        require(_to != address(0), "Invalid recipient");
         uint256 txIndex = transactions.length;
 
         transactions.push(

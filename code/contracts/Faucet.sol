@@ -35,6 +35,7 @@ contract Faucet is Ownable, ReentrancyGuard, Pausable {
     event CooldownUpdated(uint256 oldCooldown, uint256 newCooldown);
     event FaucetFunded(address indexed funder, uint256 amount);
     event TokensWithdrawn(address indexed to, uint256 amount);
+    event MaxDailyDripsUpdated(uint256 oldMax, uint256 newMax);
 
     constructor(address _token) Ownable(msg.sender) {
         token = MaxToken42Mining(_token);
@@ -165,7 +166,9 @@ contract Faucet is Ownable, ReentrancyGuard, Pausable {
      */
     function setMaxDailyDrips(uint256 _maxDailyDrips) external onlyOwner {
         require(_maxDailyDrips > 0, "Must allow at least 1 drip");
+        uint256 oldMax = maxDailyDrips;
         maxDailyDrips = _maxDailyDrips;
+        emit MaxDailyDripsUpdated(oldMax, _maxDailyDrips);
     }
 
     /**
